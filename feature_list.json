@@ -1,0 +1,50 @@
+{
+  "project": "android-app",
+  "description": "Aplicación Android con MVVM + Clean Architecture, Jetpack Compose, Hilt y Room.",
+  "rules": {
+    "one_feature_at_a_time": true,
+    "one_task_at_a_time": true,
+    "require_human_approval_per_task": true,
+    "require_approved_spec_to_implement": true,
+    "valid_status": ["pending", "spec_ready", "in_progress", "done", "blocked"],
+    "sdd_required_when": "feature has \"sdd\": true"
+  },
+  "features": [
+    {
+      "id": 1,
+      "name": "insertar-alimentos-despensa",
+      "title": "Insertar alimentos en la despensa",
+      "description": "Permite añadir alimentos al inventario de la despensa doméstica mediante tres modalidades: formulario manual, escaneo de código de barras (EAN-8, EAN-13, UPC-A) y procesamiento OCR de un ticket de compra.",
+      "acceptance": [
+        "El formulario manual valida nombre (≤100 chars), cantidad (0.001–99.999) y fecha de caducidad (DD/MM/AAAA)",
+        "El autocompletado de nombre sugiere hasta 5 resultados ordenados alfabéticamente",
+        "El escáner de código de barras acepta únicamente EAN-8, EAN-13 y UPC-A",
+        "El servicio Open Food Facts pre-rellena el formulario y tiene timeout de 10s",
+        "El módulo OCR filtra ítems con confianza ≥ 70% y tiene timeout de 30s",
+        "La inserción múltiple es independiente: un fallo no bloquea los demás",
+        "Se permiten duplicados (mismo nombre, distintos IDs)",
+        "Todos los tests de propiedad (P1–P8 con Kotest, 100 iter.) pasan"
+      ],
+      "sdd": true,
+      "status": "spec_ready"
+    },
+    {
+      "id": 2,
+      "name": "recipe-consumer-android",
+      "title": "Consumidor de recetas (Recipe API)",
+      "description": "Aplicación Android que consume la Recipe API para generar recetas personalizadas basadas en ingredientes y preferencias del usuario. Incluye offline-first con Room, búsqueda/filtrado, favoritos, compartir y soporte de accesibilidad.",
+      "acceptance": [
+        "La pantalla de input permite añadir hasta 50 ingredientes con validación",
+        "Las preferencias (dificultad, duración, raciones) se persisten con DataStore",
+        "La generación de recetas llama a la API y guarda en Room (offline-first)",
+        "El filtrado por búsqueda, dificultad y rango de tiempo funciona correctamente",
+        "Los favoritos se persisten en Room y se pueden filtrar por pestaña",
+        "El compartir formatea el texto con pie 'Shared from Recipe Consumer App'",
+        "El límite de 100 recetas se aplica eliminando las más antiguas no favoritas",
+        "Todos los elementos interactivos tienen contentDescription (accesibilidad)"
+      ],
+      "sdd": true,
+      "status": "spec_ready"
+    }
+  ]
+}
