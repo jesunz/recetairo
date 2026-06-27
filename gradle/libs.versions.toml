@@ -18,6 +18,7 @@ timber = "5.0.1"
 kotest = "5.9.1"
 robolectric = "4.14.1"
 androidxTestCore = "1.6.1"
+mlkitTextRecognition = "16.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -48,6 +49,7 @@ timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "tim
 kotest-property = { group = "io.kotest", name = "kotest-property-jvm", version.ref = "kotest" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
+mlkit-text-recognition = { group = "com.google.mlkit", name = "text-recognition", version.ref = "mlkitTextRecognition" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

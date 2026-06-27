@@ -1,8 +1,10 @@
 package com.jesunez.recetairo.feature.food.di
 
 import com.jesunez.recetairo.feature.food.data.repository.FoodRepositoryImpl
+import com.jesunez.recetairo.feature.food.data.repository.OcrRepositoryImpl
 import com.jesunez.recetairo.feature.food.data.repository.ProductRepositoryImpl
 import com.jesunez.recetairo.feature.food.domain.repository.FoodRepository
+import com.jesunez.recetairo.feature.food.domain.repository.OcrRepository
 import com.jesunez.recetairo.feature.food.domain.repository.ProductRepository
 import dagger.Binds
 import dagger.Module
@@ -22,5 +24,7 @@ abstract class RepositoryModule {
     @Singleton
     abstract fun bindProductRepository(impl: ProductRepositoryImpl): ProductRepository
 
-    // @Binds for OcrRepositoryImpl (T18) will be added when the implementation is created.
+    @Binds
+    @Singleton
+    abstract fun bindOcrRepository(impl: OcrRepositoryImpl): OcrRepository
 }
