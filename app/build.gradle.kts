@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace = "com.jesunez.recetairo"
-    compileSdk = 37
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.jesunez.recetairo"
         minSdk = 27
-        targetSdk = 37
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -57,6 +57,7 @@ dependencies {
     ksp(libs.room.compiler)
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
     implementation(libs.okhttp)
     implementation(libs.retrofit)
     implementation(libs.retrofit.moshi)
