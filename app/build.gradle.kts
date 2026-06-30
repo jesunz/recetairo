@@ -65,6 +65,7 @@ dependencies {
     ksp(libs.moshi.kotlin.codegen)
     implementation(libs.timber)
     implementation(libs.mlkit.text.recognition)
+    implementation(libs.mlkit.barcode.scanning)
     testImplementation(libs.junit)
     testImplementation(libs.kotest.property)
     testImplementation(libs.robolectric)
