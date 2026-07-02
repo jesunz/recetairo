@@ -26,7 +26,7 @@
         "Todos los tests de propiedad (P1–P8 con Kotest, 100 iter.) pasan"
       ],
       "sdd": true,
-      "status": "spec_ready"
+      "status": "done"
     },
     {
       "id": 2,
@@ -45,6 +45,22 @@
       ],
       "sdd": true,
       "status": "spec_ready"
+    },
+    {
+      "id": 3,
+      "name": "home-redesign",
+      "title": "Rediseño visual de la Home y Sistema de Diseño",
+      "description": "Implementación del sistema de diseño 'Digital Organic' (colores, tipografía y formas) y rediseño de la pantalla principal basado en el prototipo de Stitch. Incluye la integración de componentes Material 3 alineados con la nueva identidad visual.",
+      "acceptance": [
+        "El esquema de colores coincide con specs/home-redesign/DESIGN.md (Primary: Forest Green, Surface: Parchment Cream)",
+        "Las fuentes Epilogue y Plus Jakarta Sans están configuradas en el Typography",
+        "Los botones y tarjetas usan el radio de curvatura 'Pill-shaped' (full) definido",
+        "La Home muestra las secciones: Header con saludo, 'Por Vencer' (placeholder), 'Acciones Rápidas' (funcionales) y 'Categorías de Despensa' (placeholder)",
+        "Los botones de Acciones Rápidas (Escanear Ticket, Código de Barras, Entrada Manual) mantienen su funcionalidad actual",
+        "El diseño es responsive y se adapta a diferentes tamaños de pantalla siguiendo el Fluid Grid"
+      ],
+      "sdd": true,
+      "status": "in_progress"
     }
   ]
 }
