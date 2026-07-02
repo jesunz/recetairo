@@ -38,6 +38,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.jesunez.recetairo.feature.food.domain.model.FoodField
+import com.jesunez.recetairo.feature.food.domain.model.ProductInfo
 import com.jesunez.recetairo.feature.food.domain.model.SaveResult
 import com.jesunez.recetairo.feature.food.ui.AddFoodUiState
 import com.jesunez.recetairo.feature.food.ui.viewmodel.AddFoodViewModel
@@ -48,10 +49,16 @@ import com.jesunez.recetairo.ui.theme.RecetairoTheme
 @Composable
 fun AddFoodScreen(
     onNavigateBack: () -> Unit,
+    productInfo: ProductInfo? = null,
     viewModel: AddFoodViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    // R15: pre-rellena el formulario cuando se navega desde el escáner de código de barras
+    LaunchedEffect(productInfo) {
+        productInfo?.let { viewModel.onProductInfoReceived(it) }
+    }
 
     LaunchedEffect(state.saveResult) {
         if (state.saveResult is SaveResult.Success) {
