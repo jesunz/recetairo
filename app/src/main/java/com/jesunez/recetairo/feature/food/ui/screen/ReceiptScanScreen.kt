@@ -25,6 +25,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
@@ -160,6 +162,7 @@ private fun PermissionRationaleView(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -290,37 +293,39 @@ private fun OcrItemListView(
     onConfirmSelection: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(
-            text = "Productos detectados en el ticket",
-            style = MaterialTheme.typography.titleMedium
-        )
-        Spacer(Modifier.height(8.dp))
-        LazyColumn(modifier = Modifier.weight(1f)) {
-            itemsIndexed(items) { index, item ->
-                OcrItemRow(
-                    item = item,
-                    onItemChanged = { updated -> onItemEdited(index, updated) },
-                    onRemove = { onItemRemoved(index) }
-                )
-                Spacer(Modifier.height(8.dp))
-            }
+        item {
+            Text(
+                text = "Productos detectados en el ticket",
+                style = MaterialTheme.typography.titleMedium
+            )
         }
-        Button(
-            onClick = onConfirmSelection,
-            enabled = !isLoading && items.any { it.isSelected },
-            modifier = Modifier
-                .fillMaxWidth()
-                .semantics { contentDescription = "Confirmar selección de productos" }
-        ) {
-            if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.height(20.dp))
-            } else {
-                Text("Confirmar selección")
+        itemsIndexed(items) { index, item ->
+            OcrItemRow(
+                item = item,
+                onItemChanged = { updated -> onItemEdited(index, updated) },
+                onRemove = { onItemRemoved(index) }
+            )
+        }
+        item {
+            Button(
+                onClick = onConfirmSelection,
+                enabled = !isLoading && items.any { it.isSelected },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp)
+                    .semantics { contentDescription = "Confirmar selección de productos" }
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.height(20.dp))
+                } else {
+                    Text("Confirmar selección")
+                }
             }
         }
     }
@@ -388,6 +393,7 @@ private fun InsertionSummaryView(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
