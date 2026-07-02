@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.jesunez.recetairo.core.domain.model.Result
 import com.jesunez.recetairo.feature.food.domain.model.Food
 import com.jesunez.recetairo.feature.food.domain.model.FoodField
+import com.jesunez.recetairo.feature.food.domain.model.ProductInfo
 import com.jesunez.recetairo.feature.food.domain.model.SaveResult
 import com.jesunez.recetairo.feature.food.domain.usecase.InsertFoodUseCase
 import com.jesunez.recetairo.feature.food.domain.usecase.SearchFoodHistoryUseCase
@@ -84,6 +85,18 @@ class AddFoodViewModel @Inject constructor(
         _uiState.update { it.copy(name = suggestion, nameSuggestions = emptyList()) }
     }
 
+    fun onProductInfoReceived(productInfo: ProductInfo) {
+        // R15: pre-rellena solo los campos con dato recibido; el resto permanece editable
+        _uiState.update {
+            it.copy(
+                name = productInfo.name ?: it.name,
+                brand = productInfo.brand ?: it.brand,
+                category = productInfo.category ?: it.category,
+                imageUrl = productInfo.imageUrl ?: it.imageUrl
+            )
+        }
+    }
+
     fun onSaveClicked() {
         val state = _uiState.value
         val parseErrors = mutableMapOf<FoodField, String>()
@@ -97,7 +110,7 @@ class AddFoodViewModel @Inject constructor(
             state.expiryDate.isBlank() -> null
             else -> try {
                 LocalDate.parse(state.expiryDate, DATE_FORMATTER)
-            } catch (e: DateTimeParseException) {
+            } catch (_: DateTimeParseException) {
                 parseErrors[FoodField.EXPIRY_DATE] = "La fecha debe tener el formato DD/MM/AAAA"
                 null
             }
