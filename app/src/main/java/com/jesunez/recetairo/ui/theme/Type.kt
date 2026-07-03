@@ -11,7 +11,9 @@ import com.jesunez.recetairo.R
 val Epilogue = FontFamily(
     Font(R.font.epilogue, FontWeight.Normal),
     Font(R.font.epilogue, FontWeight.SemiBold),
-    Font(R.font.epilogue, FontWeight.Bold)
+    Font(R.font.epilogue, FontWeight.Bold),
+    Font(R.font.epilogue, FontWeight.ExtraBold),
+    Font(R.font.epilogue, FontWeight.Black)
 )
 
 val PlusJakartaSans = FontFamily(
