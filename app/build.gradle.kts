@@ -73,6 +73,8 @@ dependencies {
     implementation(libs.camerax.lifecycle)
     implementation(libs.camerax.view)
     implementation(libs.lifecycle.runtime.compose)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.ai)
     testImplementation(libs.junit)
     testImplementation(libs.kotest.property)
     testImplementation(libs.robolectric)
