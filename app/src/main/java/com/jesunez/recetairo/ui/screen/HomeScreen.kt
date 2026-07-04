@@ -1,20 +1,23 @@
 package com.jesunez.recetairo.ui.screen
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.jesunez.recetairo.ui.component.BottomNavigationBar
+import com.jesunez.recetairo.ui.component.CategoryGrid
+import com.jesunez.recetairo.ui.component.ExpiringSoonSection
+import com.jesunez.recetairo.ui.component.HomeHeader
+import com.jesunez.recetairo.ui.component.QuickActionsSection
+import com.jesunez.recetairo.ui.theme.RecetairoTheme
 
 @Composable
 fun HomeScreen(
@@ -23,46 +26,62 @@ fun HomeScreen(
     onScanReceipt: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Scaffold(modifier = modifier) { paddingValues ->
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        topBar = {
+            HomeHeader(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                onNotificationClick = { /* TODO: Implement notifications */ },
+                onProfileClick = { /* TODO: Implement profile */ }
+            )
+        },
+        bottomBar = {
+            BottomNavigationBar(
+                currentRoute = "home",
+                onItemClick = { /* TODO: Implement navigation */ }
+            )
+        }
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .verticalScroll(rememberScrollState())
         ) {
-            Text(text = "Despensa", style = MaterialTheme.typography.headlineMedium)
-
-            Button(
-                onClick = onAddManually,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 32.dp)
-                    .semantics { contentDescription = "Añadir alimento manualmente" }
-            ) {
-                Text("Añadir alimento manualmente")
-            }
-
-            Button(
-                onClick = onScanBarcode,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp)
-                    .semantics { contentDescription = "Escanear código de barras" }
-            ) {
-                Text("Escanear código de barras")
-            }
-
-            Button(
-                onClick = onScanReceipt,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp)
-                    .semantics { contentDescription = "Escanear ticket de compra" }
-            ) {
-                Text("Escanear ticket de compra")
-            }
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            ExpiringSoonSection(
+                onViewAllClick = { /* TODO: View all expiring items */ }
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            QuickActionsSection(
+                onScanReceipt = onScanReceipt,
+                onScanBarcode = onScanBarcode,
+                onAddManually = onAddManually
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            CategoryGrid(
+                onCategoryClick = { /* TODO: Navigate to category */ }
+            )
+            
+            // Padding to ensure content is not hidden behind the floating bottom bar
+            Spacer(modifier = Modifier.height(100.dp))
         }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFCF9F8)
+@Composable
+fun HomeScreenPreview() {
+    RecetairoTheme {
+        HomeScreen(
+            onAddManually = {},
+            onScanBarcode = {},
+            onScanReceipt = {}
+        )
     }
 }
