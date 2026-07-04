@@ -4,6 +4,7 @@ data class OcrFoodItem(
     val name: String,
     val quantity: String,
     val expiryDate: String,
+    val category: FoodCategory = FoodCategory.OTROS,
     val confidence: Float,
     val isVerified: Boolean,
     val isSelected: Boolean = true
