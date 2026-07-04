@@ -69,7 +69,7 @@ fun HomeScreen(
             )
             
             // Padding to ensure content is not hidden behind the floating bottom bar
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(modifier = Modifier.height(104.dp))
         }
     }
 }

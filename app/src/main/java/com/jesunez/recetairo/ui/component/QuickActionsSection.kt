@@ -45,7 +45,7 @@ fun QuickActionsSection(
     onAddManually: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val buttonHeight = 110.dp
+    val buttonHeight = 112.dp
 
     Column(
         modifier = modifier
@@ -78,7 +78,7 @@ fun QuickActionsSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(buttonHeight),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             QuickActionButtonVertical(
                 onClick = onScanBarcode,
@@ -129,7 +129,7 @@ private fun QuickActionButton(
                 contentDescription = null,
                 modifier = Modifier.size(40.dp)
             )
-            Spacer(modifier = Modifier.width(20.dp))
+            Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Text(
                     text = title,
@@ -178,7 +178,7 @@ private fun QuickActionButtonVertical(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(36.dp)
+                modifier = Modifier.size(32.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(

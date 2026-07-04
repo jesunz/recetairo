@@ -80,7 +80,7 @@ private fun ExpiringFoodCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.width(260.dp),
+        modifier = modifier.width(256.dp),
         shape = CircleShape, // Pill shape
         colors = CardDefaults.cardColors(
             containerColor = item.color.copy(alpha = 0.12f)

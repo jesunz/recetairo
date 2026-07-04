@@ -41,7 +41,7 @@ fun HomeHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp),
+            .padding(vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -58,11 +58,11 @@ fun HomeHeader(
                     imageVector = Icons.Default.Restaurant,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
             
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(8.dp))
             
             Text(
                 text = "RecetAIro",
@@ -80,7 +80,7 @@ fun HomeHeader(
                     imageVector = Icons.Outlined.Notifications,
                     contentDescription = "Notificaciones",
                     tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
             
@@ -89,7 +89,7 @@ fun HomeHeader(
                     imageVector = Icons.Outlined.Person,
                     contentDescription = "Perfil",
                     tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
