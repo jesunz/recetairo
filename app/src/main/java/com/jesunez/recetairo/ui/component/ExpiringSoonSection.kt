@@ -28,6 +28,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import com.jesunez.recetairo.ui.theme.RecetairoTheme
 
 /**
@@ -79,8 +81,14 @@ private fun ExpiringFoodCard(
     item: ExpiringFoodPlaceholder,
     modifier: Modifier = Modifier
 ) {
+    val expiryText = if (item.daysLeft == 1) "Vence mañana" else "Vence en ${item.daysLeft} días"
+    
     Card(
-        modifier = modifier.width(256.dp),
+        modifier = modifier
+            .width(256.dp)
+            .semantics(mergeDescendants = true) {
+                contentDescription = "${item.name}, $expiryText"
+            },
         shape = CircleShape, // Pill shape
         colors = CardDefaults.cardColors(
             containerColor = item.color.copy(alpha = 0.12f)

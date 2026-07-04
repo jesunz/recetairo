@@ -53,7 +53,7 @@ fun BottomNavigationBar(
                 icon = {
                     Icon(
                         imageVector = item.icon,
-                        contentDescription = item.label
+                        contentDescription = null // Null because label is provided
                     )
                 },
                 label = {

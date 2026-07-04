@@ -27,6 +27,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import com.jesunez.recetairo.ui.theme.RecetairoTheme
 
 /**
@@ -96,7 +98,11 @@ private fun CategoryCard(
 ) {
     Card(
         onClick = onClick,
-        modifier = modifier.aspectRatio(1f),
+        modifier = modifier
+            .aspectRatio(1f)
+            .semantics(mergeDescendants = true) {
+                contentDescription = "${category.name}, ${category.itemCount} artículos"
+            },
         shape = MaterialTheme.shapes.large, // 32dp
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
