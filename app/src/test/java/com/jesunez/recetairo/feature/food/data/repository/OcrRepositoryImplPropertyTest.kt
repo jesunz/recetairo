@@ -13,11 +13,9 @@ import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognizer
 import com.jesunez.recetairo.core.domain.model.Result
 import io.kotest.property.Arb
-import io.kotest.property.arbitrary.filter
 import io.kotest.property.arbitrary.list
 import io.kotest.property.arbitrary.numericFloat
 import io.kotest.property.checkAll
-import java.io.ByteArrayOutputStream
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -30,6 +28,7 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import java.io.ByteArrayOutputStream
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
@@ -90,8 +89,8 @@ class OcrRepositoryImplPropertyTest {
     }
 
     @Test
-    fun should_includeOnlyItemsAboveThreshold_when_confidenceVaries() {
-        // R22: items with confidence >= OCR_CONFIDENCE_THRESHOLD pass the filter
+    fun should_returnAllRecognizedLines_when_confidenceVaries() {
+        // Feature: mejora-extraccion-ia-ticket, R1: no confidence filtering, all lines pass through
         runBlocking {
             checkAll(100, Arb.list(Arb.numericFloat(0f, 1f), 0..20)) { confidences ->
                 val repository = buildRepository(confidences)
@@ -102,11 +101,10 @@ class OcrRepositoryImplPropertyTest {
                     result is Result.Success
                 )
                 val items = (result as Result.Success).data
-                val expectedCount = confidences.count { it >= OcrRepositoryImpl.OCR_CONFIDENCE_THRESHOLD }
 
                 assertEquals(
-                    "R22: item count must equal number of confidences >= ${OcrRepositoryImpl.OCR_CONFIDENCE_THRESHOLD}",
-                    expectedCount,
+                    "R1: item count must equal the number of recognized lines regardless of confidence",
+                    confidences.size,
                     items.size
                 )
             }
@@ -114,16 +112,10 @@ class OcrRepositoryImplPropertyTest {
     }
 
     @Test
-    fun should_returnNoItems_when_allConfidencesBelowThreshold() {
-        // R22: items below threshold must be filtered out entirely
+    fun should_preserveConfidence_when_extractingLines() {
+        // Feature: mejora-extraccion-ia-ticket, R1: original line confidence must be preserved
         runBlocking {
-            checkAll(
-                100,
-                Arb.list(
-                    Arb.numericFloat(0f, 1f).filter { it < OcrRepositoryImpl.OCR_CONFIDENCE_THRESHOLD },
-                    1..20
-                )
-            ) { confidences ->
+            checkAll(100, Arb.list(Arb.numericFloat(0f, 1f), 1..20)) { confidences ->
                 val repository = buildRepository(confidences)
                 val result = repository.extractItemsFromImage(MINIMAL_PNG)
 
@@ -131,25 +123,22 @@ class OcrRepositoryImplPropertyTest {
                     "Result must be Success but was: $result",
                     result is Result.Success
                 )
-                assertTrue(
-                    "R22: result must be empty when all confidences are below threshold",
-                    (result as Result.Success).data.isEmpty()
+                val items = (result as Result.Success).data
+
+                assertEquals(
+                    "R1: each returned item must preserve its original line confidence",
+                    confidences.sorted(),
+                    items.map { it.confidence }.sorted()
                 )
             }
         }
     }
 
     @Test
-    fun should_setIsVerifiedTrue_when_itemPassesThreshold() {
-        // R20: OcrFoodItem.isVerified must be true for all returned items
+    fun should_setIsVerifiedFalse_when_itemIsExtracted() {
+        // Feature: mejora-extraccion-ia-ticket, R1: classification is deferred to the AI extractor
         runBlocking {
-            checkAll(
-                100,
-                Arb.list(
-                    Arb.numericFloat(0f, 1f).filter { it >= OcrRepositoryImpl.OCR_CONFIDENCE_THRESHOLD },
-                    1..10
-                )
-            ) { confidences ->
+            checkAll(100, Arb.list(Arb.numericFloat(0f, 1f), 1..10)) { confidences ->
                 val repository = buildRepository(confidences)
                 val result = repository.extractItemsFromImage(MINIMAL_PNG)
 
@@ -159,8 +148,8 @@ class OcrRepositoryImplPropertyTest {
                 )
                 val items = (result as Result.Success).data
                 assertTrue(
-                    "R20: all items passing the threshold must have isVerified == true",
-                    items.all { it.isVerified }
+                    "R1: all items returned by OcrRepositoryImpl must have isVerified == false",
+                    items.none { it.isVerified }
                 )
             }
         }
