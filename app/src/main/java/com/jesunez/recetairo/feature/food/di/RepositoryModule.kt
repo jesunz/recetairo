@@ -1,8 +1,10 @@
 package com.jesunez.recetairo.feature.food.di
 
+import com.jesunez.recetairo.feature.food.data.repository.FirebaseAiFoodExtractionRepositoryImpl
 import com.jesunez.recetairo.feature.food.data.repository.FoodRepositoryImpl
 import com.jesunez.recetairo.feature.food.data.repository.OcrRepositoryImpl
 import com.jesunez.recetairo.feature.food.data.repository.ProductRepositoryImpl
+import com.jesunez.recetairo.feature.food.domain.repository.AiFoodExtractionRepository
 import com.jesunez.recetairo.feature.food.domain.repository.FoodRepository
 import com.jesunez.recetairo.feature.food.domain.repository.OcrRepository
 import com.jesunez.recetairo.feature.food.domain.repository.ProductRepository
@@ -27,4 +29,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindOcrRepository(impl: OcrRepositoryImpl): OcrRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAiFoodExtractionRepository(
+        impl: FirebaseAiFoodExtractionRepositoryImpl,
+    ): AiFoodExtractionRepository
 }
