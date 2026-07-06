@@ -440,6 +440,8 @@ private fun ReceiptScanErrorBanner(
             "El procesamiento del ticket ha superado el tiempo de espera."
         OcrError.NoItemsExtracted ->
             "No se ha podido identificar ningún producto en el ticket."
+        OcrError.AiServiceUnavailable ->
+            "No se ha podido contactar con el servicio de clasificación. Los resultados pueden ser menos precisos."
     }
 
     Card(

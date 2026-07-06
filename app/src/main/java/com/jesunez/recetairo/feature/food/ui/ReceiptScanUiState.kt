@@ -6,11 +6,13 @@ import com.jesunez.recetairo.feature.food.domain.model.OcrFoodItem
 sealed class OcrError {
     object Timeout : OcrError()
     object NoItemsExtracted : OcrError()
+    object AiServiceUnavailable : OcrError()
 }
 
 data class ReceiptScanUiState(
     val isCameraPermissionGranted: Boolean = false,
     val isLoading: Boolean = false,
+    val isClassifying: Boolean = false,
     val error: OcrError? = null,
     val items: List<OcrFoodItem> = emptyList(),
     val insertionSummary: InsertionSummary? = null
