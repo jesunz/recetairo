@@ -4,6 +4,7 @@ package com.jesunez.recetairo.feature.food.ui.viewmodel
 import com.jesunez.recetairo.core.domain.model.Result
 import com.jesunez.recetairo.feature.food.domain.model.Food
 import com.jesunez.recetairo.feature.food.domain.model.OcrFoodItem
+import com.jesunez.recetairo.feature.food.domain.repository.AiFoodExtractionRepository
 import com.jesunez.recetairo.feature.food.domain.repository.FoodRepository
 import com.jesunez.recetairo.feature.food.domain.repository.OcrRepository
 import com.jesunez.recetairo.feature.food.domain.usecase.InsertFoodUseCase
@@ -36,9 +37,19 @@ class ReceiptScanViewModelTest {
     private var nextOcrResult: suspend (ByteArray) -> Result<List<OcrFoodItem>> =
         { Result.Success(emptyList()) }
 
+    private var lastOcrItems: List<OcrFoodItem> = emptyList()
+
     private val fakeOcrRepository = object : OcrRepository {
-        override suspend fun extractItemsFromImage(imageBytes: ByteArray): Result<List<OcrFoodItem>> =
-            nextOcrResult(imageBytes)
+        override suspend fun extractItemsFromImage(imageBytes: ByteArray): Result<List<OcrFoodItem>> {
+            val result = nextOcrResult(imageBytes)
+            if (result is Result.Success) lastOcrItems = result.data
+            return result
+        }
+    }
+
+    private val fakeAiFoodExtractionRepository = object : AiFoodExtractionRepository {
+        override suspend fun extractFoodItems(rawText: String): Result<List<OcrFoodItem>> =
+            Result.Success(lastOcrItems)
     }
 
     private var nextInsertResult: (Food) -> Result<Unit> = { Result.Success(Unit) }
@@ -55,7 +66,7 @@ class ReceiptScanViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         viewModel = ReceiptScanViewModel(
-            ProcessReceiptOcrUseCase(fakeOcrRepository),
+            ProcessReceiptOcrUseCase(fakeOcrRepository, fakeAiFoodExtractionRepository),
             InsertMultipleFoodsUseCase(InsertFoodUseCase(fakeFoodRepository))
         )
     }

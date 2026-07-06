@@ -42,8 +42,8 @@ class ReceiptScanViewModel @Inject constructor(
                 is Result.Success -> _uiState.update {
                     it.copy(
                         isLoading = false,
-                        items = result.data,
-                        error = if (result.data.isEmpty()) OcrError.NoItemsExtracted else null
+                        items = result.data.items,
+                        error = if (result.data.items.isEmpty()) OcrError.NoItemsExtracted else null
                     )
                 }
                 is Result.Error -> _uiState.update {
