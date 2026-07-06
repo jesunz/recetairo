@@ -15,13 +15,17 @@ class ProcessReceiptOcrUseCase @Inject constructor(
     private val ocrRepository: OcrRepository,
     private val aiFoodExtractionRepository: AiFoodExtractionRepository
 ) {
-    suspend operator fun invoke(imageBytes: ByteArray): Result<ProcessReceiptOcrResult> {
+    suspend operator fun invoke(
+        imageBytes: ByteArray,
+        onOcrCompleted: () -> Unit = {}
+    ): Result<ProcessReceiptOcrResult> {
         var ocrItems: List<OcrFoodItem>? = null
         return try {
             withTimeout(30_000.milliseconds) {
                 when (val ocrResult = ocrRepository.extractItemsFromImage(imageBytes)) {
                     is Result.Success -> {
                         ocrItems = ocrResult.data
+                        onOcrCompleted()
                         classify(ocrResult.data)
                     }
                     is Result.Error -> Result.Error(ocrResult.exception, ocrResult.message)
