@@ -107,6 +107,7 @@ class ReceiptScanViewModel @Inject constructor(
     private fun OcrFoodItem.toFood(): Food = Food(
         name = name,
         quantity = quantity.replace(',', '.').toDoubleOrNull() ?: 0.0,
+        category = category.label(),
         expiryDate = runCatching { LocalDate.parse(expiryDate, DATE_FORMATTER) }.getOrNull()
     )
 
