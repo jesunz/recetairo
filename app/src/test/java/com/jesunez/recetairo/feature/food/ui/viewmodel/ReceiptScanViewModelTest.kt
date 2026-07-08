@@ -3,6 +3,7 @@ package com.jesunez.recetairo.feature.food.ui.viewmodel
 
 import com.jesunez.recetairo.core.domain.model.Result
 import com.jesunez.recetairo.feature.food.domain.model.Food
+import com.jesunez.recetairo.feature.food.domain.model.FoodCategory
 import com.jesunez.recetairo.feature.food.domain.model.OcrFoodItem
 import com.jesunez.recetairo.feature.food.domain.repository.AiFoodExtractionRepository
 import com.jesunez.recetairo.feature.food.domain.repository.FoodRepository
@@ -47,9 +48,10 @@ class ReceiptScanViewModelTest {
         }
     }
 
+    private var nextAiResult: suspend () -> Result<List<OcrFoodItem>> = { Result.Success(lastOcrItems) }
+
     private val fakeAiFoodExtractionRepository = object : AiFoodExtractionRepository {
-        override suspend fun extractFoodItems(rawText: String): Result<List<OcrFoodItem>> =
-            Result.Success(lastOcrItems)
+        override suspend fun extractFoodItems(rawText: String): Result<List<OcrFoodItem>> = nextAiResult()
     }
 
     private var nextInsertResult: (Food) -> Result<Unit> = { Result.Success(Unit) }
@@ -174,6 +176,89 @@ class ReceiptScanViewModelTest {
         val summary = viewModel.uiState.value.insertionSummary
         assertEquals(1, summary?.successCount)
         assertTrue(summary?.failures.isNullOrEmpty())
+    }
+
+    // endregion
+
+    // region R6 — edición de categoría por ítem
+
+    @Test
+    fun should_updateItemCategory_when_categoryEditedByIndex() = runTest(testDispatcher) {
+        // Given
+        nextOcrResult = { Result.Success(listOf(ocrItem("Manzana"), ocrItem("Pan"))) }
+        viewModel.onImageCaptured(ByteArray(0))
+        advanceUntilIdle()
+
+        // When
+        viewModel.onItemCategoryChanged(0, FoodCategory.FRUTAS)
+
+        // Then
+        val items = viewModel.uiState.value.items
+        assertEquals(FoodCategory.FRUTAS, items[0].category)
+        assertEquals("Manzana", items[0].name)
+        assertEquals(FoodCategory.OTROS, items[1].category)
+    }
+
+    // endregion
+
+    // region R7 — aviso de Modo_Degradado
+
+    @Test
+    fun should_setAiServiceUnavailableError_when_aiExtractionFails() = runTest(testDispatcher) {
+        // Given
+        nextOcrResult = { Result.Success(listOf(ocrItem("Manzana"))) }
+        nextAiResult = { Result.Error(Exception("fallo IA"), "fallo IA") }
+
+        // When
+        viewModel.onImageCaptured(ByteArray(0))
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(OcrError.AiServiceUnavailable, viewModel.uiState.value.error)
+        assertEquals(FoodCategory.OTROS, viewModel.uiState.value.items.first().category)
+        assertFalse(viewModel.uiState.value.isLoading)
+        assertFalse(viewModel.uiState.value.isClassifying)
+    }
+
+    @Test
+    fun should_setNoError_when_aiExtractionSucceeds() = runTest(testDispatcher) {
+        // Given
+        nextOcrResult = { Result.Success(listOf(ocrItem("Manzana"))) }
+        nextAiResult = { Result.Success(listOf(ocrItem("Manzana").copy(category = FoodCategory.FRUTAS))) }
+
+        // When
+        viewModel.onImageCaptured(ByteArray(0))
+        advanceUntilIdle()
+
+        // Then
+        assertEquals(null, viewModel.uiState.value.error)
+        assertEquals(FoodCategory.FRUTAS, viewModel.uiState.value.items.first().category)
+    }
+
+    // endregion
+
+    // region R13 — indicador isClassifying durante la llamada al Extractor_IA
+
+    @Test
+    fun should_setIsClassifyingTrueAndIsLoadingFalse_when_ocrCompletesAndAiIsStillRunning() = runTest(testDispatcher) {
+        // Given
+        nextOcrResult = { Result.Success(listOf(ocrItem("Manzana"))) }
+        nextAiResult = { delay(5_000.milliseconds); Result.Success(lastOcrItems) }
+
+        // When
+        viewModel.onImageCaptured(ByteArray(0))
+        testDispatcher.scheduler.runCurrent()
+
+        // Then
+        assertTrue(viewModel.uiState.value.isClassifying)
+        assertFalse(viewModel.uiState.value.isLoading)
+
+        // When (AI extractor finishes)
+        advanceUntilIdle()
+
+        // Then
+        assertFalse(viewModel.uiState.value.isClassifying)
+        assertFalse(viewModel.uiState.value.items.isEmpty())
     }
 
     // endregion
