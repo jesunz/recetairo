@@ -10,7 +10,8 @@ fun AiFoodItemDto.toDomain(): OcrFoodItem = OcrFoodItem(
     expiryDate = "",
     category = FoodCategory.fromLabel(category),
     confidence = 1.0f,
-    isVerified = true
+    isVerified = true,
+    needsReview = needsReview
 )
 
 fun List<AiFoodItemDto>.toDomain(): List<OcrFoodItem> = map { it.toDomain() }
