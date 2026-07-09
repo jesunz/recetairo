@@ -25,14 +25,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -56,6 +61,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.jesunez.recetairo.feature.food.domain.model.FoodCategory
 import com.jesunez.recetairo.feature.food.domain.model.InsertionSummary
 import com.jesunez.recetairo.feature.food.domain.model.OcrFoodItem
 import com.jesunez.recetairo.feature.food.ui.OcrError
@@ -102,6 +108,7 @@ fun ReceiptScanScreen(
         onImageCaptured = viewModel::onImageCaptured,
         onItemEdited = viewModel::onItemEdited,
         onItemRemoved = viewModel::onItemRemoved,
+        onItemCategoryChanged = viewModel::onItemCategoryChanged,
         onConfirmSelection = viewModel::onConfirmSelection,
         onEnterManually = onNavigateToAddFood,
         onFinish = onFinish
@@ -116,6 +123,7 @@ fun ReceiptScanContent(
     onImageCaptured: (ByteArray) -> Unit,
     onItemEdited: (Int, OcrFoodItem) -> Unit,
     onItemRemoved: (Int) -> Unit,
+    onItemCategoryChanged: (Int, FoodCategory) -> Unit,
     onConfirmSelection: () -> Unit,
     onEnterManually: () -> Unit,
     onFinish: () -> Unit,
@@ -128,9 +136,16 @@ fun ReceiptScanContent(
             state.insertionSummary != null ->
                 InsertionSummaryView(state.insertionSummary, onFinish)
             state.items.isNotEmpty() ->
-                OcrItemListView(state.items, state.isLoading, onItemEdited, onItemRemoved, onConfirmSelection)
+                OcrItemListView(
+                    items = state.items,
+                    isLoading = state.isLoading,
+                    onItemEdited = onItemEdited,
+                    onItemRemoved = onItemRemoved,
+                    onItemCategoryChanged = onItemCategoryChanged,
+                    onConfirmSelection = onConfirmSelection
+                )
             else ->
-                CameraCaptureView(onImageCaptured, state.isLoading)
+                CameraCaptureView(onImageCaptured, state.isLoading, state.isClassifying)
         }
 
         // Error banner: R22 (no items extracted), R25 (30s timeout). Dismissible so the
@@ -197,22 +212,39 @@ private fun PermissionRationaleView(
 private fun CameraCaptureView(
     onImageCaptured: (ByteArray) -> Unit,
     isLoading: Boolean,
+    isClassifying: Boolean,
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         CameraPreviewWithCapture(
             onImageCaptured = onImageCaptured,
-            enabled = !isLoading,
+            enabled = !isLoading && !isClassifying,
             modifier = Modifier.fillMaxSize()
         )
-        if (isLoading) {
-            Box(
+        // R13: distinct indicator per phase — OCR (isLoading) reads the ticket text,
+        // isClassifying calls the AI extractor afterward; only one is true at a time.
+        if (isLoading || isClassifying) {
+            val label = if (isClassifying) "Clasificando alimentos con IA" else "Leyendo el ticket"
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .semantics { contentDescription = "Procesando ticket" },
-                contentAlignment = Alignment.Center
+                    .semantics { contentDescription = label },
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(
+                    color = if (isClassifying) {
+                        MaterialTheme.colorScheme.tertiary
+                    } else {
+                        MaterialTheme.colorScheme.primary
+                    }
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             }
         }
     }
@@ -290,6 +322,7 @@ private fun OcrItemListView(
     isLoading: Boolean,
     onItemEdited: (Int, OcrFoodItem) -> Unit,
     onItemRemoved: (Int) -> Unit,
+    onItemCategoryChanged: (Int, FoodCategory) -> Unit,
     onConfirmSelection: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -309,7 +342,8 @@ private fun OcrItemListView(
             OcrItemRow(
                 item = item,
                 onItemChanged = { updated -> onItemEdited(index, updated) },
-                onRemove = { onItemRemoved(index) }
+                onRemove = { onItemRemoved(index) },
+                onCategoryChanged = { category -> onItemCategoryChanged(index, category) }
             )
         }
         item {
@@ -336,6 +370,7 @@ private fun OcrItemRow(
     item: OcrFoodItem,
     onItemChanged: (OcrFoodItem) -> Unit,
     onRemove: () -> Unit,
+    onCategoryChanged: (FoodCategory) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(modifier = modifier.fillMaxWidth()) {
@@ -374,11 +409,59 @@ private fun OcrItemRow(
                         .semantics { contentDescription = "Fecha de caducidad del producto" }
                 )
             }
+            CategoryDropdown(
+                selected = item.category,
+                onCategoryChanged = onCategoryChanged,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+            )
             TextButton(
                 onClick = onRemove,
                 modifier = Modifier.semantics { contentDescription = "Eliminar ${item.name} de la lista" }
             ) {
                 Text("Eliminar")
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CategoryDropdown(
+    selected: FoodCategory,
+    onCategoryChanged: (FoodCategory) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+        modifier = modifier
+    ) {
+        OutlinedTextField(
+            value = selected.label(),
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Categoría") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryNotEditable, enabled = true)
+                .fillMaxWidth()
+                .semantics { contentDescription = "Categoría del producto: ${selected.label()}" }
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            FoodCategory.entries.forEach { category ->
+                DropdownMenuItem(
+                    text = { Text(category.label()) },
+                    onClick = {
+                        onCategoryChanged(category)
+                        expanded = false
+                    },
+                    modifier = Modifier.semantics {
+                        contentDescription = "Seleccionar categoría ${category.label()}"
+                    }
+                )
             }
         }
     }
@@ -440,6 +523,8 @@ private fun ReceiptScanErrorBanner(
             "El procesamiento del ticket ha superado el tiempo de espera."
         OcrError.NoItemsExtracted ->
             "No se ha podido identificar ningún producto en el ticket."
+        OcrError.AiServiceUnavailable ->
+            "No se ha podido contactar con el servicio de clasificación. Los resultados pueden ser menos precisos."
     }
 
     Card(

@@ -4,6 +4,7 @@ package com.jesunez.recetairo.feature.food.ui.viewmodel
 import com.jesunez.recetairo.core.domain.model.Result
 import com.jesunez.recetairo.feature.food.domain.model.Food
 import com.jesunez.recetairo.feature.food.domain.model.OcrFoodItem
+import com.jesunez.recetairo.feature.food.domain.repository.AiFoodExtractionRepository
 import com.jesunez.recetairo.feature.food.domain.repository.FoodRepository
 import com.jesunez.recetairo.feature.food.domain.repository.OcrRepository
 import com.jesunez.recetairo.feature.food.domain.usecase.InsertFoodUseCase
@@ -39,14 +40,20 @@ class ReceiptScanToInsertionIntegrationTest {
     private val insertedFoods = mutableListOf<Food>()
     private var failingFoodName: String? = null
 
+    private val ocrItems = listOf(
+        OcrFoodItem(name = "Manzanas", quantity = "6", expiryDate = "31/12/2026", confidence = 0.95f, isVerified = true),
+        OcrFoodItem(name = "Pan de molde", quantity = "1", expiryDate = "15/08/2026", confidence = 0.88f, isVerified = true),
+        OcrFoodItem(name = "Yogur", quantity = "4", expiryDate = "01/09/2026", confidence = 0.75f, isVerified = true)
+    )
+
     private val fakeOcrRepository = object : OcrRepository {
-        override suspend fun extractItemsFromImage(imageBytes: ByteArray): Result<List<OcrFoodItem>> = Result.Success(
-            listOf(
-                OcrFoodItem(name = "Manzanas", quantity = "6", expiryDate = "31/12/2026", confidence = 0.95f, isVerified = true),
-                OcrFoodItem(name = "Pan de molde", quantity = "1", expiryDate = "15/08/2026", confidence = 0.88f, isVerified = true),
-                OcrFoodItem(name = "Yogur", quantity = "4", expiryDate = "01/09/2026", confidence = 0.75f, isVerified = true)
-            )
-        )
+        override suspend fun extractItemsFromImage(imageBytes: ByteArray): Result<List<OcrFoodItem>> =
+            Result.Success(ocrItems)
+    }
+
+    private val fakeAiFoodExtractionRepository = object : AiFoodExtractionRepository {
+        override suspend fun extractFoodItems(rawText: String): Result<List<OcrFoodItem>> =
+            Result.Success(ocrItems)
     }
 
     private val fakeFoodRepository = object : FoodRepository {
@@ -67,7 +74,7 @@ class ReceiptScanToInsertionIntegrationTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         viewModel = ReceiptScanViewModel(
-            ProcessReceiptOcrUseCase(fakeOcrRepository),
+            ProcessReceiptOcrUseCase(fakeOcrRepository, fakeAiFoodExtractionRepository),
             InsertMultipleFoodsUseCase(InsertFoodUseCase(fakeFoodRepository))
         )
     }

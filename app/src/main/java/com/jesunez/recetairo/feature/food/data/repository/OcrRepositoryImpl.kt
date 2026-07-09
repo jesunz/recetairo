@@ -6,10 +6,10 @@ import com.google.mlkit.vision.text.TextRecognizer
 import com.jesunez.recetairo.core.domain.model.Result
 import com.jesunez.recetairo.feature.food.domain.model.OcrFoodItem
 import com.jesunez.recetairo.feature.food.domain.repository.OcrRepository
+import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlinx.coroutines.suspendCancellableCoroutine
 
 class OcrRepositoryImpl @Inject constructor(
     private val recognizer: TextRecognizer
@@ -32,25 +32,19 @@ class OcrRepositoryImpl @Inject constructor(
 
         val items = visionText.textBlocks
             .flatMap { it.lines }
-            .mapNotNull { line ->
-                val confidence = line.confidence
-                if (confidence >= OCR_CONFIDENCE_THRESHOLD && line.text.isNotBlank()) {
-                    OcrFoodItem(
-                        name = line.text.trim(),
-                        quantity = "",
-                        expiryDate = "",
-                        confidence = confidence,
-                        isVerified = true
-                    )
-                } else null
+            .filter { it.text.isNotBlank() }
+            .map { line ->
+                OcrFoodItem(
+                    name = line.text.trim(),
+                    quantity = "",
+                    expiryDate = "",
+                    confidence = line.confidence,
+                    isVerified = false
+                )
             }
 
         Result.Success(items)
     } catch (e: Exception) {
         Result.Error(e)
-    }
-
-    companion object {
-        const val OCR_CONFIDENCE_THRESHOLD = 0.70f
     }
 }
