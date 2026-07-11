@@ -7,7 +7,9 @@ import com.jesunez.recetairo.feature.food.domain.model.OcrFoodItem
 import com.jesunez.recetairo.feature.food.domain.repository.AiFoodExtractionRepository
 import com.jesunez.recetairo.feature.food.domain.repository.OcrRepository
 import io.kotest.property.Arb
+import io.kotest.property.arbitrary.filter
 import io.kotest.property.arbitrary.list
+import io.kotest.property.arbitrary.map
 import io.kotest.property.arbitrary.numericFloat
 import io.kotest.property.arbitrary.of
 import io.kotest.property.checkAll
@@ -25,6 +27,23 @@ import kotlin.time.Duration.Companion.milliseconds
 class ProcessReceiptOcrUseCasePropertyTest {
 
     private enum class AiFailureMode { NETWORK_ERROR, SERVICE_ERROR, TIMEOUT }
+
+    // Same closed list as NumericNoiseFilter.NON_FOOD_TOKENS (Tokens_No_Alimentarios, R7).
+    // Duplicated here on purpose: the test must assert against the documented closed list,
+    // not by reaching into the filter's private implementation.
+    private val nonFoodTokens = setOf(
+        "TEL", "TELEFONO", "CIF", "NIF", "IVA", "TOTAL", "SUBTOTAL",
+        "CAMBIO", "TARJETA", "EFECTIVO", "TICKET", "FACTURA"
+    )
+
+    private val validFoodNameArb: Arb<String> = Arb.list(Arb.of(('a'..'z').toList()), 4..10)
+        .map { chars -> chars.joinToString("").replaceFirstChar(Char::uppercase) }
+        .filter { name -> name.uppercase() !in nonFoodTokens }
+
+    private val numericNoiseLineArb: Arb<String> = Arb.list(
+        Arb.of(listOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', ',', '-', '/', 'x', 'X', ' ')),
+        1..8
+    ).map { it.joinToString("") }
 
     private fun buildUseCase(ocrItems: List<OcrFoodItem>, failureMode: AiFailureMode): ProcessReceiptOcrUseCase {
         val ocrRepository = object : OcrRepository {
@@ -85,6 +104,47 @@ class ProcessReceiptOcrUseCasePropertyTest {
                     data.items
                 )
                 assertTrue("P11: the result must be flagged as Modo_Degradado", data.isDegradedMode)
+            }
+        }
+
+    @Test
+    fun should_excludeNumericAndTokenLines_and_keepValidFoodLines_when_inDegradedMode() =
+        runTest(StandardTestDispatcher()) {
+            // Feature: afinar-extraccion-ticket, Property 14, R6-R8: on a mix of valid food
+            // names, purely numeric lines, and Tokens_No_Alimentarios, all with confidence
+            // >= 70%, Modo_Degradado must exclude the numeric/token lines and keep only the
+            // valid food names.
+            checkAll(
+                100,
+                Arb.list(validFoodNameArb, 1..5),
+                Arb.list(numericNoiseLineArb, 0..5),
+                Arb.list(Arb.of(nonFoodTokens.toList()), 0..5)
+            ) { validNames, numericLines, tokenLines ->
+                fun toItem(name: String) = OcrFoodItem(
+                    name = name,
+                    quantity = "1",
+                    expiryDate = "31/12/2026",
+                    confidence = 0.9f,
+                    isVerified = false
+                )
+                val ocrItems = (validNames + numericLines + tokenLines).map(::toItem).shuffled()
+                val useCase = buildUseCase(ocrItems, AiFailureMode.SERVICE_ERROR)
+
+                val result = useCase(ByteArray(0))
+
+                assertTrue(
+                    "P14: Modo_Degradado must still yield a Result.Success",
+                    result is Result.Success
+                )
+                val data = (result as Result.Success).data
+
+                assertEquals(
+                    "P14, R6-R8: only the valid food names must survive the combined filters, " +
+                        "in a confidence-independent order (all inputs are already >= 70%)",
+                    validNames.sorted(),
+                    data.items.map { it.name }.sorted()
+                )
+                assertTrue("P14: the result must be flagged as Modo_Degradado", data.isDegradedMode)
             }
         }
 }
