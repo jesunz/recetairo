@@ -6,6 +6,7 @@ import com.jesunez.recetairo.feature.food.domain.model.OcrFoodItem
 import com.jesunez.recetairo.feature.food.domain.model.ProcessReceiptOcrResult
 import com.jesunez.recetairo.feature.food.domain.repository.AiFoodExtractionRepository
 import com.jesunez.recetairo.feature.food.domain.repository.OcrRepository
+import com.jesunez.recetairo.feature.food.domain.util.NumericNoiseFilter
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
@@ -53,6 +54,7 @@ class ProcessReceiptOcrUseCase @Inject constructor(
         ProcessReceiptOcrResult(
             items = ocrItems
                 .filter { it.confidence >= CONFIDENCE_THRESHOLD }
+                .filterNot { NumericNoiseFilter.isNoise(it.name) }
                 .map { it.copy(category = FoodCategory.OTROS, isVerified = true) },
             isDegradedMode = true
         )
