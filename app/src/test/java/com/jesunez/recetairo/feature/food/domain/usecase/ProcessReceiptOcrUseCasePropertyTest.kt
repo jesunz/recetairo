@@ -7,6 +7,7 @@ import com.jesunez.recetairo.feature.food.domain.model.OcrFoodItem
 import com.jesunez.recetairo.feature.food.domain.repository.AiFoodExtractionRepository
 import com.jesunez.recetairo.feature.food.domain.repository.OcrRepository
 import io.kotest.property.Arb
+import io.kotest.property.arbitrary.bind
 import io.kotest.property.arbitrary.filter
 import io.kotest.property.arbitrary.list
 import io.kotest.property.arbitrary.map
@@ -40,10 +41,17 @@ class ProcessReceiptOcrUseCasePropertyTest {
         .map { chars -> chars.joinToString("").replaceFirstChar(Char::uppercase) }
         .filter { name -> name.uppercase() !in nonFoodTokens }
 
-    private val numericNoiseLineArb: Arb<String> = Arb.list(
-        Arb.of(listOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', ',', '-', '/', 'x', 'X', ' ')),
-        1..8
-    ).map { it.joinToString("") }
+    // Every real numeric-noise line (quantity, price, phone fragment) has at least one
+    // digit; NumericNoiseFilter relies on that to tell a "2x3" quantity line apart from
+    // a food name made up entirely of x/X letters (e.g. "Xxxx"). Mixing in a mandatory
+    // digit keeps this arbitrary representative of that contract.
+    private val numericNoiseLineArb: Arb<String> = Arb.bind(
+        Arb.of(('0'..'9').toList()),
+        Arb.list(
+            Arb.of(listOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', ',', '-', '/', 'x', 'X', ' ')),
+            0..7
+        )
+    ) { mandatoryDigit, extraChars -> (extraChars + mandatoryDigit).joinToString("") }
 
     private fun buildUseCase(ocrItems: List<OcrFoodItem>, failureMode: AiFailureMode): ProcessReceiptOcrUseCase {
         val ocrRepository = object : OcrRepository {
