@@ -263,6 +263,70 @@ class ReceiptScanViewModelTest {
 
     // endregion
 
+    // region T12 — items con needsReview=true siguen editables/seleccionables/insertables (R4, R5)
+
+    @Test
+    fun should_updateNeedsReviewItemLikeAnyOther_when_edited() = runTest(testDispatcher) {
+        // Given
+        nextOcrResult = { Result.Success(listOf(ocrItem("Manz").copy(needsReview = true))) }
+        viewModel.onImageCaptured(ByteArray(0))
+        advanceUntilIdle()
+
+        // When
+        val edited = viewModel.uiState.value.items[0].copy(name = "Manzana")
+        viewModel.onItemEdited(0, edited)
+
+        // Then
+        val item = viewModel.uiState.value.items[0]
+        assertEquals("Manzana", item.name)
+        assertTrue("T12: editing a needsReview item must not clear the flag", item.needsReview)
+    }
+
+    @Test
+    fun should_toggleSelectionOfNeedsReviewItem_when_edited() = runTest(testDispatcher) {
+        // Given
+        nextOcrResult = { Result.Success(listOf(ocrItem("Manzana").copy(needsReview = true))) }
+        viewModel.onImageCaptured(ByteArray(0))
+        advanceUntilIdle()
+        val original = viewModel.uiState.value.items[0]
+        assertTrue(original.isSelected)
+
+        // When
+        viewModel.onItemEdited(0, original.copy(isSelected = false))
+
+        // Then
+        assertFalse(
+            "T12: needsReview items must remain selectable/deselectable like any other item",
+            viewModel.uiState.value.items[0].isSelected
+        )
+    }
+
+    @Test
+    fun should_insertNeedsReviewItem_when_selectedAndConfirmed() = runTest(testDispatcher) {
+        // Given
+        nextOcrResult = {
+            Result.Success(listOf(ocrItem("Manzana").copy(needsReview = true), ocrItem("Pan")))
+        }
+        viewModel.onImageCaptured(ByteArray(0))
+        advanceUntilIdle()
+        nextInsertResult = { Result.Success(Unit) }
+
+        // When
+        viewModel.onConfirmSelection()
+        advanceUntilIdle()
+
+        // Then
+        val summary = viewModel.uiState.value.insertionSummary
+        assertEquals(
+            "T12: a needsReview item must be insertable exactly like any other selected item",
+            2,
+            summary?.successCount
+        )
+        assertTrue(summary?.failures.isNullOrEmpty())
+    }
+
+    // endregion
+
     private fun ocrItem(name: String) = OcrFoodItem(
         name = name,
         quantity = "1",

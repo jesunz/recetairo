@@ -25,7 +25,7 @@ hiltNavigationCompose = "1.2.0"
 coroutines = "1.9.0"
 camerax = "1.4.1"
 navigationCompose = "2.5.1"
-firebaseBom = "34.15.0"
+firebaseBom = "34.16.0"
 googleServices = "4.5.0"
 
 [libraries]
@@ -71,6 +71,9 @@ lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-ru
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-ai = { group = "com.google.firebase", name = "firebase-ai" }
+firebase-appcheck = { group = "com.google.firebase", name = "firebase-appcheck" }
+firebase-appcheck-playintegrity = { group = "com.google.firebase", name = "firebase-appcheck-playintegrity" }
+firebase-appcheck-debug = { group = "com.google.firebase", name = "firebase-appcheck-debug" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

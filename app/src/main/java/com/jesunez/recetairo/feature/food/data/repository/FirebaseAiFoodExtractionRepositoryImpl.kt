@@ -51,16 +51,26 @@ class FirebaseAiFoodExtractionRepositoryImpl @Inject constructor(
             - DO NOT return totals, subtotals, taxes, discounts, store name/address,
               dates, payment method, loyalty card numbers, receipt/ticket numbers,
               barcodes, or any other non-product line.
-            - If a line is ambiguous or you are not confident it is a real food product,
-              OMIT it rather than guessing.
+            - If a line is totally ambiguous (no indication at all that it is a food
+              product), OMIT it rather than guessing.
+            - If a line looks like a food product but its name is incomplete or
+              corrupted by OCR noise (missing letters, truncated word, stray symbols)
+              so that you cannot reconstruct it with confidence, DO NOT omit it and
+              DO NOT complete or guess the missing characters. Instead, return it with
+              "needsReview": true and "name" set to exactly the text as it appears in
+              the source, cleaned only of stray OCR noise that is clearly not part of
+              any word.
             - For each food item, extract:
               - "name": the product name as written, cleaned of stray OCR noise. Do not
-                translate it or invent words that are not in the source text.
+                translate it or invent words that are not in the source text, not even
+                when "needsReview" is true.
               - "quantity": the quantity or pack size if clearly present in the line
                 (e.g. "2", "500g", "6x125ml"); use an empty string if not discernible.
               - "category": exactly one of: "lácteos", "carne", "pescado", "marisco",
                 "frutas", "verduras", "pan", "cereales", "otros". Use "otros" only when
                 none of the other 8 categories clearly apply.
+              - "needsReview": true only for incomplete/noisy-but-plausible food names
+                as described above; false (or omit the field) for every other item.
             - Output must be a JSON array matching the provided schema. Do not include
               any text, explanation, or markdown outside the JSON array. If no food
               items are found, return an empty array.

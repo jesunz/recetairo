@@ -25,9 +25,10 @@ object FirebaseAiModule {
             properties = mapOf(
                 "name" to Schema.string(),
                 "quantity" to Schema.string(),
-                "category" to Schema.enumeration(FoodCategory.entries.map { it.label() })
+                "category" to Schema.enumeration(FoodCategory.entries.map { it.label() }),
+                "needsReview" to Schema.boolean()
             ),
-            optionalProperties = listOf("quantity")
+            optionalProperties = listOf("quantity", "needsReview")
         )
 
         return Firebase.ai.generativeModel(

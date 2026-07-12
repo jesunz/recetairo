@@ -29,8 +29,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
@@ -38,6 +42,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -373,8 +378,42 @@ private fun OcrItemRow(
     onCategoryChanged: (FoodCategory) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(modifier = modifier.fillMaxWidth()) {
+    // R4, R5: needsReview items get a warning border/background + "Revisar" label so the
+    // user notices them, but stay fully editable/selectable like any other item.
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .semantics {
+                if (item.needsReview) contentDescription = "Producto a revisar: ${item.name}"
+            },
+        colors = if (item.needsReview) {
+            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+        } else {
+            CardDefaults.cardColors()
+        },
+        border = if (item.needsReview) {
+            BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+        } else {
+            null
+        }
+    ) {
         Column(Modifier.padding(12.dp)) {
+            if (item.needsReview) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.Warning,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = "Revisar",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+                Spacer(Modifier.height(4.dp))
+            }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(
                     checked = item.isSelected,

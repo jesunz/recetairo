@@ -7,5 +7,6 @@ data class OcrFoodItem(
     val category: FoodCategory = FoodCategory.OTROS,
     val confidence: Float,
     val isVerified: Boolean,
-    val isSelected: Boolean = true
+    val isSelected: Boolean = true,
+    val needsReview: Boolean = false
 )
