@@ -2,7 +2,9 @@
 package com.jesunez.recetairo.feature.food.ui.viewmodel
 
 import com.jesunez.recetairo.core.domain.model.Result
+import com.jesunez.recetairo.feature.food.domain.model.CategorySummary
 import com.jesunez.recetairo.feature.food.domain.model.Food
+import com.jesunez.recetairo.feature.food.domain.model.FoodCategory
 import com.jesunez.recetairo.feature.food.domain.model.OcrFoodItem
 import com.jesunez.recetairo.feature.food.domain.repository.AiFoodExtractionRepository
 import com.jesunez.recetairo.feature.food.domain.repository.FoodRepository
@@ -66,6 +68,13 @@ class ReceiptScanToInsertionIntegrationTest {
         }
         override suspend fun insertFoods(foods: List<Food>): Result<Unit> = Result.Success(Unit)
         override fun searchFoodNames(query: String): Flow<List<String>> = flowOf(emptyList())
+        override fun getAllFoods(): Flow<Result<List<Food>>> = flowOf(Result.Success(emptyList()))
+        override fun getFoodsByCategory(category: FoodCategory): Flow<Result<List<Food>>> =
+            flowOf(Result.Success(emptyList()))
+        override fun getExpiringSoonFoods(limit: Int?): Flow<Result<List<Food>>> =
+            flowOf(Result.Success(emptyList()))
+        override fun getCategorySummaries(): Flow<Result<List<CategorySummary>>> =
+            flowOf(Result.Success(emptyList()))
     }
 
     private lateinit var viewModel: ReceiptScanViewModel

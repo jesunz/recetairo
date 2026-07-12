@@ -2,7 +2,9 @@
 package com.jesunez.recetairo.feature.food.domain.usecase
 
 import com.jesunez.recetairo.core.domain.model.Result
+import com.jesunez.recetairo.feature.food.domain.model.CategorySummary
 import com.jesunez.recetairo.feature.food.domain.model.Food
+import com.jesunez.recetairo.feature.food.domain.model.FoodCategory
 import com.jesunez.recetairo.feature.food.domain.repository.FoodRepository
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.list
@@ -26,6 +28,14 @@ class SearchFoodHistoryUseCasePropertyTest {
                 throw UnsupportedOperationException()
             override fun searchFoodNames(query: String): Flow<List<String>> =
                 flowOf(storedNames.filter { it.contains(query) }.sorted().take(5))
+            override fun getAllFoods(): Flow<Result<List<Food>>> =
+                throw UnsupportedOperationException()
+            override fun getFoodsByCategory(category: FoodCategory): Flow<Result<List<Food>>> =
+                throw UnsupportedOperationException()
+            override fun getExpiringSoonFoods(limit: Int?): Flow<Result<List<Food>>> =
+                throw UnsupportedOperationException()
+            override fun getCategorySummaries(): Flow<Result<List<CategorySummary>>> =
+                throw UnsupportedOperationException()
         }
         return SearchFoodHistoryUseCase(fakeRepository)
     }
