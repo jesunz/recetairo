@@ -23,21 +23,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
+import com.jesunez.recetairo.feature.food.domain.model.Food
+import com.jesunez.recetairo.feature.food.domain.model.FoodCategory
 import com.jesunez.recetairo.ui.theme.RecetairoTheme
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 /**
- * ExpiringSoonSection implements R6: "display a 'Por Vencer' (Expiring Soon) 
- * horizontal scroll section with food item placeholders."
+ * ExpiringSoonSection implements R4: horizontal scroll of foods expiring soon (max 5, sorted by
+ * expiry date ascending). R11: visually distinguishes already-expired items from upcoming ones.
  */
 @Composable
 fun ExpiringSoonSection(
+    items: List<Food>,
     modifier: Modifier = Modifier,
     onViewAllClick: () -> Unit = {}
 ) {
@@ -55,7 +59,10 @@ fun ExpiringSoonSection(
                     fontWeight = FontWeight.Bold
                 )
             )
-            TextButton(onClick = onViewAllClick) {
+            TextButton(
+                onClick = onViewAllClick,
+                modifier = Modifier.semantics { contentDescription = "Ver todo lo próximo a vencer" }
+            ) {
                 Text(
                     text = "Ver todo",
                     style = MaterialTheme.typography.labelLarge,
@@ -69,8 +76,8 @@ fun ExpiringSoonSection(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.padding(top = 8.dp)
         ) {
-            items(expiringSoonPlaceholders) { item ->
-                ExpiringFoodCard(item = item)
+            items(items, key = { it.id }) { food ->
+                ExpiringFoodCard(food = food)
             }
         }
     }
@@ -78,20 +85,30 @@ fun ExpiringSoonSection(
 
 @Composable
 private fun ExpiringFoodCard(
-    item: ExpiringFoodPlaceholder,
+    food: Food,
     modifier: Modifier = Modifier
 ) {
-    val expiryText = if (item.daysLeft == 1) "Vence mañana" else "Vence en ${item.daysLeft} días"
-    
+    // Invariant: R3/GetExpiringSoonFoodsUseCase only return foods with a non-null expiryDate.
+    val expiryDate = requireNotNull(food.expiryDate) { "Expiring soon food must have an expiryDate" }
+    val daysLeft = ChronoUnit.DAYS.between(LocalDate.now(), expiryDate)
+    val isExpired = daysLeft < 0
+    val expiryText = when {
+        isExpired -> "Caducado"
+        daysLeft == 0L -> "Vence hoy"
+        daysLeft == 1L -> "Vence mañana"
+        else -> "Vence en $daysLeft días"
+    }
+    val accentColor = if (isExpired) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary
+
     Card(
         modifier = modifier
             .width(256.dp)
             .semantics(mergeDescendants = true) {
-                contentDescription = "${item.name}, $expiryText"
+                contentDescription = "${food.name}, $expiryText"
             },
         shape = CircleShape, // Pill shape
         colors = CardDefaults.cardColors(
-            containerColor = item.color.copy(alpha = 0.12f)
+            containerColor = accentColor.copy(alpha = 0.12f)
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -110,51 +127,44 @@ private fun ExpiringFoodCard(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = item.emoji,
+                    text = FoodCategory.fromLabel(food.category).emoji(),
                     fontSize = 28.sp
                 )
             }
-            
+
             Spacer(modifier = Modifier.width(16.dp))
-            
+
             Column {
                 Text(
-                    text = item.name,
+                    text = food.name,
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.tertiary
+                        color = accentColor
                     ),
                     maxLines = 1
                 )
-                
+
                 Text(
-                    text = if (item.daysLeft == 1) "Vence mañana" else "Vence en ${item.daysLeft} días",
+                    text = expiryText,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.8f)
+                    color = accentColor.copy(alpha = 0.8f)
                 )
             }
         }
     }
 }
 
-private data class ExpiringFoodPlaceholder(
-    val name: String,
-    val emoji: String,
-    val daysLeft: Int,
-    val color: Color
-)
-
-private val expiringSoonPlaceholders = listOf(
-    ExpiringFoodPlaceholder("Leche Entera", "🥛", 1, Color(0xFFBA1A1A)), // Error/Tertiary tint
-    ExpiringFoodPlaceholder("Aguacate", "🥑", 3, Color(0xFF645E49)), // Secondary tint
-    ExpiringFoodPlaceholder("Pechuga Pollo", "🍗", 2, Color(0xFFBA1A1A)),
-    ExpiringFoodPlaceholder("Yogur Griego", "🍦", 5, Color(0xFF645E49))
-)
-
 @Preview(showBackground = true, backgroundColor = 0xFFFCF9F8)
 @Composable
 fun ExpiringSoonSectionPreview() {
     RecetairoTheme {
-        ExpiringSoonSection(modifier = Modifier.padding(vertical = 16.dp))
+        ExpiringSoonSection(
+            modifier = Modifier.padding(vertical = 16.dp),
+            items = listOf(
+                Food(id = 1, name = "Leche Entera", quantity = 1.0, category = "Lácteos", expiryDate = LocalDate.now()),
+                Food(id = 2, name = "Aguacate", quantity = 2.0, category = "Frutas", expiryDate = LocalDate.now().plusDays(3)),
+                Food(id = 3, name = "Pechuga Pollo", quantity = 1.0, category = "Carne", expiryDate = LocalDate.now().minusDays(1))
+            )
+        )
     }
 }

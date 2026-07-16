@@ -160,18 +160,6 @@ private fun CategoryCard(
     }
 }
 
-private fun FoodCategory.emoji(): String = when (this) {
-    FoodCategory.LACTEOS -> "🧀"
-    FoodCategory.CARNE -> "🥩"
-    FoodCategory.PESCADO -> "🐟"
-    FoodCategory.MARISCO -> "🦐"
-    FoodCategory.FRUTAS -> "🍎"
-    FoodCategory.VERDURAS -> "🥦"
-    FoodCategory.PAN -> "🍞"
-    FoodCategory.CEREALES -> "🌾"
-    FoodCategory.OTROS -> "📦"
-}
-
 @Preview(showBackground = true, backgroundColor = 0xFFFCF9F8)
 @Composable
 fun CategoryGridPreview() {

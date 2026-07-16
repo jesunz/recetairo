@@ -51,6 +51,7 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(8.dp))
             
             ExpiringSoonSection(
+                items = emptyList(), // TODO: wire HomeViewModel (T12)
                 onViewAllClick = { /* TODO: View all expiring items */ }
             )
             
