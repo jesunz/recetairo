@@ -65,6 +65,7 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(24.dp))
             
             CategoryGrid(
+                categories = emptyList(), // TODO: wire HomeViewModel (T12)
                 onCategoryClick = { /* TODO: Navigate to category */ }
             )
             
