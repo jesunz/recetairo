@@ -7,9 +7,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.jesunez.recetairo.feature.food.domain.model.PantryFilter
 import com.jesunez.recetairo.feature.food.domain.model.ProductInfo
 import com.jesunez.recetairo.feature.food.ui.screen.AddFoodScreen
 import com.jesunez.recetairo.feature.food.ui.screen.BarcodeScanScreen
+import com.jesunez.recetairo.feature.food.ui.screen.PantryScreen
 import com.jesunez.recetairo.feature.food.ui.screen.ReceiptScanScreen
 import com.jesunez.recetairo.ui.screen.HomeScreen
 
@@ -20,7 +22,28 @@ fun RecetairoNavGraph(navController: NavHostController = rememberNavController()
             HomeScreen(
                 onAddManually = { navController.navigate(Screen.AddFood.buildRoute()) },
                 onScanBarcode = { navController.navigate(Screen.BarcodeScan.route) },
-                onScanReceipt = { navController.navigate(Screen.ReceiptScan.route) }
+                onScanReceipt = { navController.navigate(Screen.ReceiptScan.route) },
+                onCategoryClick = { category ->
+                    navController.navigate(Screen.Pantry.buildRoute(PantryFilter.ByCategory(category)))
+                },
+                onViewAllExpiringClick = {
+                    navController.navigate(Screen.Pantry.buildRoute(PantryFilter.ExpiringSoon))
+                },
+                onNavigateToPantry = {
+                    navController.navigate(Screen.Pantry.buildRoute(PantryFilter.All))
+                }
+            )
+        }
+
+        composable(
+            route = Screen.Pantry.route,
+            arguments = listOf(
+                navArgument("category") { type = NavType.StringType; nullable = true },
+                navArgument("expiringSoon") { type = NavType.StringType; nullable = true }
+            )
+        ) {
+            PantryScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 
