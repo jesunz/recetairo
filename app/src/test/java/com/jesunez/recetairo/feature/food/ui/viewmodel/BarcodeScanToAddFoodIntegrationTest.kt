@@ -107,6 +107,7 @@ class BarcodeScanToAddFoodIntegrationTest {
 
         // When: el usuario revisa/completa el resto de campos obligatorios y guarda
         addFoodViewModel.onQuantityChanged("2")
+        addFoodViewModel.onUnitChanged("unidades")
         addFoodViewModel.onSaveClicked()
         advanceUntilIdle()
 

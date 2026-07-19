@@ -186,6 +186,7 @@ class AddFoodViewModelTest {
         nextInsertResult = Result.Success(Unit)
         viewModel.onNameChanged("Leche")
         viewModel.onQuantityChanged("1.0")
+        viewModel.onUnitChanged("unidades")
 
         // When
         viewModel.onSaveClicked()
@@ -202,6 +203,7 @@ class AddFoodViewModelTest {
         nextInsertResult = Result.Error(RuntimeException("db error"), errorMessage)
         viewModel.onNameChanged("Leche")
         viewModel.onQuantityChanged("1.0")
+        viewModel.onUnitChanged("unidades")
 
         // When
         viewModel.onSaveClicked()
