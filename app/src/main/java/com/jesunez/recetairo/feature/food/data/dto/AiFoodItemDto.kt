@@ -8,5 +8,6 @@ data class AiFoodItemDto(
     @param:Json(name = "name") val name: String,
     @param:Json(name = "quantity") val quantity: String? = null,
     @param:Json(name = "category") val category: String,
-    @param:Json(name = "needsReview") val needsReview: Boolean = false
+    @param:Json(name = "needsReview") val needsReview: Boolean = false,
+    @param:Json(name = "emoji") val emoji: String? = null
 )
