@@ -12,5 +12,6 @@ data class FoodEntity(
     val category: String,
     val expiryDate: String?,   // ISO-8601 (yyyy-MM-dd), null si no aplica
     val imageUrl: String?,
-    val insertedAt: Long       // epoch ms
+    val insertedAt: Long,      // epoch ms
+    val emoji: String? = null
 )
