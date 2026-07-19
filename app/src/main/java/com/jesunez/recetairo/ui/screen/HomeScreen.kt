@@ -9,21 +9,55 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.jesunez.recetairo.feature.food.domain.model.FoodCategory
+import com.jesunez.recetairo.ui.HomeUiState
 import com.jesunez.recetairo.ui.component.BottomNavigationBar
 import com.jesunez.recetairo.ui.component.CategoryGrid
 import com.jesunez.recetairo.ui.component.ExpiringSoonSection
 import com.jesunez.recetairo.ui.component.HomeHeader
 import com.jesunez.recetairo.ui.component.QuickActionsSection
 import com.jesunez.recetairo.ui.theme.RecetairoTheme
+import com.jesunez.recetairo.ui.viewmodel.HomeViewModel
 
 @Composable
 fun HomeScreen(
     onAddManually: () -> Unit,
     onScanBarcode: () -> Unit,
     onScanReceipt: () -> Unit,
+    onCategoryClick: (FoodCategory) -> Unit,
+    onViewAllExpiringClick: () -> Unit,
+    onNavigateToPantry: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: HomeViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    HomeContent(
+        uiState = uiState,
+        onAddManually = onAddManually,
+        onScanBarcode = onScanBarcode,
+        onScanReceipt = onScanReceipt,
+        onCategoryClick = onCategoryClick,
+        onViewAllExpiringClick = onViewAllExpiringClick,
+        onNavigateToPantry = onNavigateToPantry,
+        modifier = modifier
+    )
+}
+
+@Composable
+fun HomeContent(
+    uiState: HomeUiState,
+    onAddManually: () -> Unit,
+    onScanBarcode: () -> Unit,
+    onScanReceipt: () -> Unit,
+    onCategoryClick: (FoodCategory) -> Unit,
+    onViewAllExpiringClick: () -> Unit,
+    onNavigateToPantry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -38,7 +72,7 @@ fun HomeScreen(
         bottomBar = {
             BottomNavigationBar(
                 currentRoute = "home",
-                onItemClick = { /* TODO: Implement navigation */ }
+                onItemClick = { route -> if (route == "pantry") onNavigateToPantry() }
             )
         }
     ) { paddingValues ->
@@ -49,25 +83,31 @@ fun HomeScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             Spacer(modifier = Modifier.height(8.dp))
-            
-            ExpiringSoonSection(
-                onViewAllClick = { /* TODO: View all expiring items */ }
-            )
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
+
+            // R14: the section is omitted entirely when there is nothing expiring soon, not
+            // shown with an empty state.
+            if (uiState.expiringSoonFoods.isNotEmpty()) {
+                ExpiringSoonSection(
+                    items = uiState.expiringSoonFoods,
+                    onViewAllClick = onViewAllExpiringClick
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+
             QuickActionsSection(
                 onScanReceipt = onScanReceipt,
                 onScanBarcode = onScanBarcode,
                 onAddManually = onAddManually
             )
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             CategoryGrid(
-                onCategoryClick = { /* TODO: Navigate to category */ }
+                categories = uiState.categorySummaries,
+                onCategoryClick = onCategoryClick
             )
-            
+
             // Padding to ensure content is not hidden behind the floating bottom bar
             Spacer(modifier = Modifier.height(104.dp))
         }
@@ -78,10 +118,14 @@ fun HomeScreen(
 @Composable
 fun HomeScreenPreview() {
     RecetairoTheme {
-        HomeScreen(
+        HomeContent(
+            uiState = HomeUiState(isLoading = false),
             onAddManually = {},
             onScanBarcode = {},
-            onScanReceipt = {}
+            onScanReceipt = {},
+            onCategoryClick = {},
+            onViewAllExpiringClick = {},
+            onNavigateToPantry = {}
         )
     }
 }

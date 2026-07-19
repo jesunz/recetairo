@@ -1,7 +1,10 @@
 package com.jesunez.recetairo.navigation
 
+import com.jesunez.recetairo.feature.food.domain.model.PantryFilter
 import com.jesunez.recetairo.feature.food.domain.model.ProductInfo
 import java.net.URLEncoder
+
+private fun String.encode(): String = URLEncoder.encode(this, "UTF-8")
 
 sealed class Screen(val route: String) {
 
@@ -27,7 +30,17 @@ sealed class Screen(val route: String) {
             )
             return "$BASE_ROUTE?${params.joinToString("&")}"
         }
+    }
 
-        private fun String.encode(): String = URLEncoder.encode(this, "UTF-8")
+    object Pantry : Screen(
+        "pantry?category={category}&expiringSoon={expiringSoon}"
+    ) {
+        const val BASE_ROUTE = "pantry"
+
+        fun buildRoute(filter: PantryFilter): String = when (filter) {
+            PantryFilter.All -> BASE_ROUTE
+            is PantryFilter.ByCategory -> "$BASE_ROUTE?category=${filter.category.name.encode()}"
+            PantryFilter.ExpiringSoon -> "$BASE_ROUTE?expiringSoon=true"
+        }
     }
 }

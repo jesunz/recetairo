@@ -21,29 +21,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
+import com.jesunez.recetairo.feature.food.domain.model.CategorySummary
+import com.jesunez.recetairo.feature.food.domain.model.FoodCategory
 import com.jesunez.recetairo.ui.theme.RecetairoTheme
 
 /**
- * CategoryGrid implements R12: "display a 'Categorías de Despensa' grid 
- * with 6 illustrative categories as placeholders."
- * 
- * Updated to match visual reference: includes total item count in header 
- * and per-category item counts.
+ * CategoryGrid implements R1: displays the 9 [FoodCategory] values with their real item count.
+ * A category with `itemCount == 0` is rendered disabled (R13).
  */
 @Composable
 fun CategoryGrid(
+    categories: List<CategorySummary>,
     modifier: Modifier = Modifier,
-    onCategoryClick: (String) -> Unit = {}
+    onCategoryClick: (FoodCategory) -> Unit = {}
 ) {
-    val totalItems = categoryPlaceholders.sumOf { it.itemCount }
+    val totalItems = categories.sumOf { it.itemCount }
 
     Column(
         modifier = modifier
@@ -71,19 +70,22 @@ fun CategoryGrid(
         }
 
         // Using Column/Row instead of LazyVerticalGrid to facilitate nesting in a scrollable HomeScreen
-        categoryPlaceholders.chunked(2).forEach { rowItems ->
+        categories.chunked(2).forEach { rowItems ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                rowItems.forEach { category ->
+                rowItems.forEach { summary ->
                     CategoryCard(
-                        category = category,
-                        onClick = { onCategoryClick(category.name) },
+                        summary = summary,
+                        onClick = { onCategoryClick(summary.category) },
                         modifier = Modifier.weight(1f)
                     )
+                }
+                if (rowItems.size == 1) {
+                    Spacer(modifier = Modifier.weight(1f))
                 }
             }
         }
@@ -92,20 +94,25 @@ fun CategoryGrid(
 
 @Composable
 private fun CategoryCard(
-    category: CategoryPlaceholder,
+    summary: CategorySummary,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val enabled = summary.itemCount > 0
+    val label = summary.category.label()
+
     Card(
         onClick = onClick,
+        enabled = enabled,
         modifier = modifier
             .aspectRatio(1f)
             .semantics(mergeDescendants = true) {
-                contentDescription = "${category.name}, ${category.itemCount} artículos"
+                contentDescription = "$label, ${summary.itemCount} artículos"
             },
         shape = MaterialTheme.shapes.large, // 32dp
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f)
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -121,56 +128,47 @@ private fun CategoryCard(
                 modifier = Modifier
                     .size(56.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surface),
+                    .background(
+                        MaterialTheme.colorScheme.surface.copy(alpha = if (enabled) 1f else 0.5f)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = category.emoji,
+                    text = summary.category.emoji(),
                     fontSize = 28.sp
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Text(
-                text = category.name,
+                text = label,
                 style = MaterialTheme.typography.titleSmall.copy(
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else 0.5f)
                 ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            
+
             Text(
-                text = "${category.itemCount} ítems",
+                text = "${summary.itemCount} ítems",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (enabled) 0.8f else 0.4f)
             )
         }
     }
 }
 
-private data class CategoryPlaceholder(
-    val name: String,
-    val emoji: String,
-    val itemCount: Int,
-    val color: Color
-)
-
-private val categoryPlaceholders = listOf(
-    CategoryPlaceholder("Frutas y Verduras", "🍎", 12, Color(0xFF3B6934)),
-    CategoryPlaceholder("Lácteos y Huevos", "🧀", 8, Color(0xFF645E49)),
-    CategoryPlaceholder("Panadería", "🍞", 5, Color(0xFF6E1C0C)),
-    CategoryPlaceholder("Granos y Pastas", "🍝", 15, Color(0xFF8D3220)),
-    CategoryPlaceholder("Carnes y Aves", "🥩", 6, Color(0xFF154212)),
-    CategoryPlaceholder("Dulces y Snacks", "🍪", 20, Color(0xFF645E49))
-)
-
 @Preview(showBackground = true, backgroundColor = 0xFFFCF9F8)
 @Composable
 fun CategoryGridPreview() {
     RecetairoTheme {
-        CategoryGrid(modifier = Modifier.padding(vertical = 16.dp))
+        CategoryGrid(
+            modifier = Modifier.padding(vertical = 16.dp),
+            categories = FoodCategory.entries.mapIndexed { index, category ->
+                CategorySummary(category = category, itemCount = if (index % 3 == 0) 0 else index * 2)
+            }
+        )
     }
 }
