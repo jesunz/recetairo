@@ -11,5 +11,6 @@ data class Food(
     val category: String = "",
     val expiryDate: LocalDate? = null,
     val imageUrl: String? = null,
-    val insertedAt: Instant = Instant.now()
+    val insertedAt: Instant = Instant.now(),
+    val emoji: String? = null
 )
