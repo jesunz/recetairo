@@ -71,6 +71,14 @@ class FirebaseAiFoodExtractionRepositoryImpl @Inject constructor(
                 none of the other 8 categories clearly apply.
               - "needsReview": true only for incomplete/noisy-but-plausible food names
                 as described above; false (or omit the field) for every other item.
+              - "emoji": OPTIONAL. If you can identify a single Unicode emoji character
+                that specifically represents this exact food item (e.g. 🧀 for a cheese
+                product, 🥛 for milk, 🍞 for bread), return it as-is in this field, as
+                the literal emoji character itself — never a name or a shortcode such as
+                ":cheese:". You are not restricted to a fixed list; pick whichever
+                single emoji best and most specifically represents the item. If you
+                cannot find one that clearly and specifically fits, omit the field
+                entirely rather than guessing or using a generic placeholder.
             - Output must be a JSON array matching the provided schema. Do not include
               any text, explanation, or markdown outside the JSON array. If no food
               items are found, return an empty array.
