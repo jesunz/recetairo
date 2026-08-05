@@ -37,11 +37,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -66,6 +61,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.jesunez.recetairo.core.ui.component.CategoryDropdown
 import com.jesunez.recetairo.feature.food.domain.model.FoodCategory
 import com.jesunez.recetairo.feature.food.domain.model.InsertionSummary
 import com.jesunez.recetairo.feature.food.domain.model.OcrFoodItem
@@ -460,47 +456,6 @@ private fun OcrItemRow(
                 modifier = Modifier.semantics { contentDescription = "Eliminar ${item.name} de la lista" }
             ) {
                 Text("Eliminar")
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun CategoryDropdown(
-    selected: FoodCategory,
-    onCategoryChanged: (FoodCategory) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = it },
-        modifier = modifier
-    ) {
-        OutlinedTextField(
-            value = selected.label(),
-            onValueChange = {},
-            readOnly = true,
-            label = { Text("Categoría") },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier
-                .menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryNotEditable, enabled = true)
-                .fillMaxWidth()
-                .semantics { contentDescription = "Categoría del producto: ${selected.label()}" }
-        )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            FoodCategory.entries.forEach { category ->
-                DropdownMenuItem(
-                    text = { Text(category.label()) },
-                    onClick = {
-                        onCategoryChanged(category)
-                        expanded = false
-                    },
-                    modifier = Modifier.semantics {
-                        contentDescription = "Seleccionar categoría ${category.label()}"
-                    }
-                )
             }
         }
     }
