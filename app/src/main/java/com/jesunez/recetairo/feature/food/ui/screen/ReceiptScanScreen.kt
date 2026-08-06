@@ -57,17 +57,21 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.jesunez.recetairo.core.ui.component.CategoryDropdown
+import com.jesunez.recetairo.core.ui.component.NumericQuantityField
+import com.jesunez.recetairo.core.ui.component.UnitDropdown
 import com.jesunez.recetairo.feature.food.domain.model.FoodCategory
 import com.jesunez.recetairo.feature.food.domain.model.InsertionSummary
 import com.jesunez.recetairo.feature.food.domain.model.OcrFoodItem
 import com.jesunez.recetairo.feature.food.ui.OcrError
 import com.jesunez.recetairo.feature.food.ui.ReceiptScanUiState
 import com.jesunez.recetairo.feature.food.ui.viewmodel.ReceiptScanViewModel
+import com.jesunez.recetairo.ui.component.emoji
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -416,6 +420,13 @@ private fun OcrItemRow(
                     onCheckedChange = { checked -> onItemChanged(item.copy(isSelected = checked)) },
                     modifier = Modifier.semantics { contentDescription = "Seleccionar ${item.name}" }
                 )
+                Text(
+                    text = item.emoji ?: item.category.emoji(),
+                    fontSize = 20.sp,
+                    modifier = Modifier
+                        .padding(end = 4.dp)
+                        .semantics { contentDescription = "Emoji del producto" }
+                )
                 OutlinedTextField(
                     value = item.name,
                     onValueChange = { onItemChanged(item.copy(name = it)) },
@@ -426,13 +437,11 @@ private fun OcrItemRow(
                 )
             }
             Row(modifier = Modifier.padding(top = 8.dp)) {
-                OutlinedTextField(
+                NumericQuantityField(
                     value = item.quantity,
                     onValueChange = { onItemChanged(item.copy(quantity = it)) },
-                    label = { Text("Cantidad") },
-                    modifier = Modifier
-                        .weight(1f)
-                        .semantics { contentDescription = "Cantidad del producto" }
+                    modifier = Modifier.weight(1f),
+                    fieldContentDescription = "Cantidad del producto"
                 )
                 Spacer(Modifier.width(8.dp))
                 OutlinedTextField(
@@ -447,6 +456,13 @@ private fun OcrItemRow(
             CategoryDropdown(
                 selected = item.category,
                 onCategoryChanged = onCategoryChanged,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+            )
+            UnitDropdown(
+                selected = item.unit,
+                onUnitChanged = { unit -> onItemChanged(item.copy(unit = unit)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp)
