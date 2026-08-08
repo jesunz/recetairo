@@ -228,7 +228,10 @@ private fun PantryFoodRow(
                     .background(MaterialTheme.colorScheme.surface),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = FoodCategory.fromLabel(food.category).emoji(), fontSize = 28.sp)
+                Text(
+                    text = food.emoji ?: FoodCategory.fromLabel(food.category).emoji(),
+                    fontSize = 28.sp
+                )
             }
 
             Spacer(modifier = Modifier.width(16.dp))
