@@ -173,7 +173,9 @@ fun AddFoodContent(
         UnitDropdown(
             selected = FoodUnit.fromLabel(state.unit),
             onUnitChanged = { onUnitChanged(it.label()) },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            isError = FoodField.UNIT in state.validationErrors,
+            supportingText = state.validationErrors[FoodField.UNIT]
         )
 
         // Category field: closed dropdown, "Otros" preselected by default (R10, R11)

@@ -23,7 +23,9 @@ import com.jesunez.recetairo.feature.food.domain.model.FoodUnit
 fun UnitDropdown(
     selected: FoodUnit,
     onUnitChanged: (FoodUnit) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isError: Boolean = false,
+    supportingText: String? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
     ExposedDropdownMenuBox(
@@ -36,6 +38,10 @@ fun UnitDropdown(
             onValueChange = {},
             readOnly = true,
             label = { Text("Unidad de medida") },
+            isError = isError,
+            supportingText = if (isError && supportingText != null) {
+                { Text(supportingText) }
+            } else null,
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier
                 .menuAnchor(type = ExposedDropdownMenuAnchorType.PrimaryNotEditable, enabled = true)
