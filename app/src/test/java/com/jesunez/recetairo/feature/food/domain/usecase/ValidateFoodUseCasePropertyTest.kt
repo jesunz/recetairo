@@ -85,7 +85,7 @@ class ValidateFoodUseCasePropertyTest {
                 Arb.string(0..150),
                 Arb.double(includeNonFiniteEdgeCases = false)
             ) { name, quantity ->
-                val food = Food(name = name, quantity = quantity)
+                val food = Food(name = name, quantity = quantity, unit = "unidades")
                 val result = useCase(food)
                 if (result.isValid) {
                     assertFalse("R26: valid food must have non-blank name", name.isBlank())

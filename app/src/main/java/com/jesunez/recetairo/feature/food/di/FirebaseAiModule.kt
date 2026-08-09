@@ -5,6 +5,7 @@ import com.google.firebase.ai.GenerativeModel
 import com.google.firebase.ai.ai
 import com.google.firebase.ai.type.Schema
 import com.google.firebase.ai.type.generationConfig
+import com.google.firebase.auth.FirebaseAuth
 import com.jesunez.recetairo.feature.food.domain.model.FoodCategory
 import dagger.Module
 import dagger.Provides
@@ -16,7 +17,11 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object FirebaseAiModule {
 
-    private const val MODEL_NAME = "gemini-2.5-flash-lite"
+    private const val MODEL_NAME = "gemini-3.5-flash-lite"
+
+    @Provides
+    @Singleton
+    fun provideFirebaseAuth(): FirebaseAuth = FirebaseAuth.getInstance()
 
     @Provides
     @Singleton

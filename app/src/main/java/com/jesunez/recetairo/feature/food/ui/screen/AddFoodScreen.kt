@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -34,10 +33,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.jesunez.recetairo.core.ui.component.CategoryDropdown
+import com.jesunez.recetairo.core.ui.component.NumericQuantityField
+import com.jesunez.recetairo.core.ui.component.UnitDropdown
+import com.jesunez.recetairo.feature.food.domain.model.FoodCategory
 import com.jesunez.recetairo.feature.food.domain.model.FoodField
+import com.jesunez.recetairo.feature.food.domain.model.FoodUnit
 import com.jesunez.recetairo.feature.food.domain.model.ProductInfo
 import com.jesunez.recetairo.feature.food.domain.model.SaveResult
 import com.jesunez.recetairo.feature.food.ui.AddFoodUiState
@@ -154,41 +157,32 @@ fun AddFoodContent(
         }
 
         // Quantity field (R1, R2, R6, R7)
-        OutlinedTextField(
+        NumericQuantityField(
             value = state.quantity,
             onValueChange = onQuantityChanged,
-            label = { Text("Cantidad *") },
+            label = "Cantidad *",
             isError = FoodField.QUANTITY in state.validationErrors,
             supportingText = if (FoodField.QUANTITY in state.validationErrors) {
-                { Text(state.validationErrors.getValue(FoodField.QUANTITY)) }
+                state.validationErrors.getValue(FoodField.QUANTITY)
             } else null,
-            modifier = Modifier
-                .fillMaxWidth()
-                .semantics { contentDescription = "Campo cantidad obligatorio" },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+            modifier = Modifier.fillMaxWidth(),
+            fieldContentDescription = "Campo cantidad obligatorio"
         )
 
-        // Unit field (R1)
-        OutlinedTextField(
-            value = state.unit,
-            onValueChange = onUnitChanged,
-            label = { Text("Unidad de medida") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .semantics { contentDescription = "Campo unidad de medida" },
-            singleLine = true
+        // Unit field: closed dropdown, "unidades" preselected by default (R6, R7)
+        UnitDropdown(
+            selected = FoodUnit.fromLabel(state.unit),
+            onUnitChanged = { onUnitChanged(it.label()) },
+            modifier = Modifier.fillMaxWidth(),
+            isError = FoodField.UNIT in state.validationErrors,
+            supportingText = state.validationErrors[FoodField.UNIT]
         )
 
-        // Category field (R1)
-        OutlinedTextField(
-            value = state.category,
-            onValueChange = onCategoryChanged,
-            label = { Text("Categoría") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .semantics { contentDescription = "Campo categoría" },
-            singleLine = true
+        // Category field: closed dropdown, "Otros" preselected by default (R10, R11)
+        CategoryDropdown(
+            selected = FoodCategory.fromLabel(state.category),
+            onCategoryChanged = { onCategoryChanged(it.label()) },
+            modifier = Modifier.fillMaxWidth()
         )
 
         // Expiry date field (R1, R6, R7)

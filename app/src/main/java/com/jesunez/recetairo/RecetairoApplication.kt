@@ -5,6 +5,7 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.appcheck.FirebaseAppCheck
 import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
 import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
 
@@ -34,6 +35,16 @@ class RecetairoApplication : Application() {
             }
             firebaseAppCheck.setTokenAutoRefreshEnabled(true)
             Timber.d("FirebaseApp and AppCheck initialized successfully")
+
+            // Initialize Anonymous Auth to satisfy Vertex AI token requirements
+            val auth = FirebaseAuth.getInstance()
+            if (auth.currentUser == null) {
+                auth.signInAnonymously()
+                    .addOnSuccessListener { Timber.d("Anonymous sign-in successful") }
+                    .addOnFailureListener { e -> Timber.e(e, "Anonymous sign-in failed") }
+            } else {
+                Timber.d("User already signed in: ${auth.currentUser?.uid}")
+            }
         } catch (e: Exception) {
             Timber.e(e, "Firebase initialization failed")
         }

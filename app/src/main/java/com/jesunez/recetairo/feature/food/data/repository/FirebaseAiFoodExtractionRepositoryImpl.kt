@@ -1,6 +1,7 @@
 package com.jesunez.recetairo.feature.food.data.repository
 
 import com.google.firebase.ai.GenerativeModel
+import com.google.firebase.auth.FirebaseAuth
 import com.jesunez.recetairo.core.domain.model.Result
 import com.jesunez.recetairo.feature.food.data.dto.AiFoodItemDto
 import com.jesunez.recetairo.feature.food.data.mapper.toDomain
@@ -8,14 +9,18 @@ import com.jesunez.recetairo.feature.food.domain.model.OcrFoodItem
 import com.jesunez.recetairo.feature.food.domain.repository.AiFoodExtractionRepository
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
+import kotlinx.coroutines.tasks.await
+import timber.log.Timber
 import javax.inject.Inject
 
 class FirebaseAiFoodExtractionRepositoryImpl @Inject constructor(
     private val generativeModel: GenerativeModel,
+    private val auth: FirebaseAuth,
     private val moshi: Moshi
 ) : AiFoodExtractionRepository {
 
     override suspend fun extractFoodItems(rawText: String): Result<List<OcrFoodItem>> = try {
+        ensureAuthenticated()
         val prompt = PROMPT_TEMPLATE.replace(RAW_TEXT_PLACEHOLDER, rawText)
         val response = generativeModel.generateContent(prompt)
         val json = response.text
@@ -28,7 +33,14 @@ class FirebaseAiFoodExtractionRepositoryImpl @Inject constructor(
 
         Result.Success(dtos.toDomain())
     } catch (e: Exception) {
+        Timber.e(e, "Firebase AI food extraction failed")
         Result.Error(e)
+    }
+
+    private suspend fun ensureAuthenticated() {
+        if (auth.currentUser == null) {
+            auth.signInAnonymously().await()
+        }
     }
 
     private companion object {
@@ -71,6 +83,14 @@ class FirebaseAiFoodExtractionRepositoryImpl @Inject constructor(
                 none of the other 8 categories clearly apply.
               - "needsReview": true only for incomplete/noisy-but-plausible food names
                 as described above; false (or omit the field) for every other item.
+              - "emoji": OPTIONAL. If you can identify a single Unicode emoji character
+                that specifically represents this exact food item (e.g. 🧀 for a cheese
+                product, 🥛 for milk, 🍞 for bread), return it as-is in this field, as
+                the literal emoji character itself — never a name or a shortcode such as
+                ":cheese:". You are not restricted to a fixed list; pick whichever
+                single emoji best and most specifically represents the item. If you
+                cannot find one that clearly and specifically fits, omit the field
+                entirely rather than guessing or using a generic placeholder.
             - Output must be a JSON array matching the provided schema. Do not include
               any text, explanation, or markdown outside the JSON array. If no food
               items are found, return an empty array.

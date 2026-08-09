@@ -70,7 +70,7 @@ class AddFoodViewModel @Inject constructor(
     }
 
     fun onUnitChanged(value: String) {
-        _uiState.update { it.copy(unit = value) }
+        _uiState.update { it.copy(unit = value, validationErrors = it.validationErrors - FoodField.UNIT) }
     }
 
     fun onCategoryChanged(value: String) {

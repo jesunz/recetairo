@@ -9,6 +9,7 @@ import com.jesunez.recetairo.feature.food.domain.repository.OcrRepository
 import com.jesunez.recetairo.feature.food.domain.util.NumericNoiseFilter
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
+import timber.log.Timber
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -45,7 +46,10 @@ class ProcessReceiptOcrUseCase @Inject constructor(
         val rawText = ocrItems.joinToString("\n") { it.name }
         return when (val aiResult = aiFoodExtractionRepository.extractFoodItems(rawText)) {
             is Result.Success -> Result.Success(ProcessReceiptOcrResult(items = aiResult.data))
-            is Result.Error -> Result.Success(degradedModeResult(ocrItems))
+            is Result.Error -> {
+                Timber.w(aiResult.exception, "AI classification failed, falling back to degraded mode")
+                Result.Success(degradedModeResult(ocrItems))
+            }
             is Result.Loading -> Result.Success(degradedModeResult(ocrItems))
         }
     }

@@ -13,7 +13,8 @@ fun Food.toEntity(): FoodEntity = FoodEntity(
     category = category,
     expiryDate = expiryDate?.toString(),
     imageUrl = imageUrl,
-    insertedAt = insertedAt.toEpochMilli()
+    insertedAt = insertedAt.toEpochMilli(),
+    emoji = emoji
 )
 
 fun FoodEntity.toDomain(): Food = Food(
@@ -24,5 +25,6 @@ fun FoodEntity.toDomain(): Food = Food(
     category = category,
     expiryDate = expiryDate?.let { LocalDate.parse(it) },
     imageUrl = imageUrl,
-    insertedAt = Instant.ofEpochMilli(insertedAt)
+    insertedAt = Instant.ofEpochMilli(insertedAt),
+    emoji = emoji
 )

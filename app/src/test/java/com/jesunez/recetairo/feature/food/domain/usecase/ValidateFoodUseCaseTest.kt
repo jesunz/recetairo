@@ -123,6 +123,31 @@ class ValidateFoodUseCaseTest {
 
     // endregion
 
+    // region unit
+
+    @Test
+    fun should_returnUnitError_when_unitBlank() {
+        // Given
+        val food = validFood().copy(unit = "   ")
+        // When
+        val result = useCase(food)
+        // Then
+        assertFalse(result.isValid)
+        assertTrue(result.errors.containsKey(FoodField.UNIT))
+    }
+
+    @Test
+    fun should_returnValid_when_unitIsPresent() {
+        // Given
+        val food = validFood().copy(unit = "unidades")
+        // When
+        val result = useCase(food)
+        // Then
+        assertFalse(result.errors.containsKey(FoodField.UNIT))
+    }
+
+    // endregion
+
     // region expiryDate
 
     @Test
@@ -199,6 +224,7 @@ class ValidateFoodUseCaseTest {
     private fun validFood() = Food(
         name = "Leche",
         quantity = 1.0,
+        unit = "unidades",
         expiryDate = LocalDate.now().plusDays(7)
     )
 }

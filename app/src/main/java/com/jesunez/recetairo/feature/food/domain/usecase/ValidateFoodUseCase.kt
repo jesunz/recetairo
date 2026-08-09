@@ -21,6 +21,10 @@ class ValidateFoodUseCase @Inject constructor() {
             errors[FoodField.QUANTITY] = "La cantidad debe estar entre $MIN_QUANTITY y $MAX_QUANTITY"
         }
 
+        if (food.unit.isBlank()) {
+            errors[FoodField.UNIT] = "La unidad de medida no puede estar vacía"
+        }
+
         food.expiryDate?.let { date ->
             if (date.isBefore(LocalDate.now())) {
                 errors[FoodField.EXPIRY_DATE] = "La fecha de caducidad no puede ser anterior a hoy"

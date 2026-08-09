@@ -3,6 +3,7 @@ package com.jesunez.recetairo.feature.food.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesunez.recetairo.core.domain.model.Result
+import com.jesunez.recetairo.feature.food.domain.model.FailedItem
 import com.jesunez.recetairo.feature.food.domain.model.Food
 import com.jesunez.recetairo.feature.food.domain.model.FoodCategory
 import com.jesunez.recetairo.feature.food.domain.model.OcrFoodItem
@@ -91,11 +92,28 @@ class ReceiptScanViewModel @Inject constructor(
     }
 
     fun onConfirmSelection() {
-        val selectedFoods = _uiState.value.items.filter { it.isSelected }.map { it.toFood() }
+        val selectedItems = _uiState.value.items.filter { it.isSelected }
+        val validFoods = mutableListOf<Food>()
+        val invalidQuantityFailures = mutableListOf<FailedItem>()
+        selectedItems.forEach { item ->
+            val food = item.toFood()
+            if (food != null) {
+                validFoods.add(food)
+            } else {
+                invalidQuantityFailures.add(
+                    FailedItem(food = Food(name = item.name, quantity = 0.0), reason = "Cantidad inválida")
+                )
+            }
+        }
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            val summary = insertMultipleFoodsUseCase(selectedFoods)
-            _uiState.update { it.copy(isLoading = false, insertionSummary = summary) }
+            val summary = insertMultipleFoodsUseCase(validFoods)
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    insertionSummary = summary.copy(failures = summary.failures + invalidQuantityFailures)
+                )
+            }
         }
     }
 
@@ -104,12 +122,17 @@ class ReceiptScanViewModel @Inject constructor(
         else -> OcrError.NoItemsExtracted
     }
 
-    private fun OcrFoodItem.toFood(): Food = Food(
-        name = name,
-        quantity = quantity.replace(',', '.').toDoubleOrNull() ?: 0.0,
-        category = category.label(),
-        expiryDate = runCatching { LocalDate.parse(expiryDate, DATE_FORMATTER) }.getOrNull()
-    )
+    private fun OcrFoodItem.toFood(): Food? {
+        val parsedQuantity = quantity.replace(',', '.').toDoubleOrNull() ?: return null
+        return Food(
+            name = name,
+            quantity = parsedQuantity,
+            unit = unit.label(),
+            category = category.label(),
+            expiryDate = runCatching { LocalDate.parse(expiryDate, DATE_FORMATTER) }.getOrNull(),
+            emoji = emoji
+        )
+    }
 
     private companion object {
         val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")

@@ -188,6 +188,50 @@ class ReceiptScanViewModelTest {
 
     // endregion
 
+    // region T13 — cantidad inválida en ítem OCR (R3, R4)
+
+    @Test
+    fun should_excludeItem_when_quantityInvalid() = runTest(testDispatcher) {
+        // Given
+        nextOcrResult = {
+            Result.Success(listOf(ocrItem("Manzana"), ocrItem("Pan").copy(quantity = "abc")))
+        }
+        viewModel.onImageCaptured(ByteArray(0))
+        advanceUntilIdle()
+        nextInsertResult = { Result.Success(Unit) }
+
+        // When
+        viewModel.onConfirmSelection()
+        advanceUntilIdle()
+
+        // Then
+        val summary = viewModel.uiState.value.insertionSummary
+        assertEquals(1, summary?.successCount)
+    }
+
+    @Test
+    fun should_reportFailure_when_quantityInvalid() = runTest(testDispatcher) {
+        // Given
+        nextOcrResult = {
+            Result.Success(listOf(ocrItem("Manzana"), ocrItem("Pan").copy(quantity = "abc")))
+        }
+        viewModel.onImageCaptured(ByteArray(0))
+        advanceUntilIdle()
+        nextInsertResult = { Result.Success(Unit) }
+
+        // When
+        viewModel.onConfirmSelection()
+        advanceUntilIdle()
+
+        // Then
+        val summary = viewModel.uiState.value.insertionSummary
+        assertEquals(1, summary?.failures?.size)
+        assertEquals("Pan", summary?.failures?.first()?.food?.name)
+        assertEquals("Cantidad inválida", summary?.failures?.first()?.reason)
+    }
+
+    // endregion
+
     // region R6 — edición de categoría por ítem
 
     @Test
