@@ -26,4 +26,13 @@ interface FoodDao {
 
     @Query("SELECT category, COUNT(*) as itemCount FROM foods GROUP BY category")
     fun getCategoryCounts(): Flow<List<CategoryCountRow>>
+
+    @Query("SELECT * FROM foods WHERE id = :id")
+    fun getById(id: Long): Flow<FoodEntity?>
+
+    @Query("DELETE FROM foods WHERE id = :id")
+    suspend fun deleteById(id: Long)
+
+    @Query("DELETE FROM foods WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<Long>)
 }
