@@ -71,6 +71,15 @@ class AddFoodViewModelPropertyTest {
 
             override fun getCategorySummaries(): Flow<Result<List<CategorySummary>>> =
                 flowOf(Result.Success(emptyList()))
+
+            override suspend fun deleteFood(foodId: Long): Result<Unit> =
+                throw UnsupportedOperationException()
+
+            override suspend fun deleteFoods(foodIds: List<Long>): Result<Unit> =
+                throw UnsupportedOperationException()
+
+            override fun getFoodById(foodId: Long): Flow<Result<Food?>> =
+                throw UnsupportedOperationException()
         }
         return AddFoodViewModel(
             validateFoodUseCase = ValidateFoodUseCase(),

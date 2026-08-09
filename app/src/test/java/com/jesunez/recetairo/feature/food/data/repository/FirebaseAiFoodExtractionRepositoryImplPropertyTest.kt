@@ -3,6 +3,8 @@ package com.jesunez.recetairo.feature.food.data.repository
 
 import com.google.firebase.ai.GenerativeModel
 import com.google.firebase.ai.type.GenerateContentResponse
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.jesunez.recetairo.core.domain.model.Result
 import com.squareup.moshi.Moshi
 import io.kotest.property.Arb
@@ -32,7 +34,10 @@ class FirebaseAiFoodExtractionRepositoryImplPropertyTest {
         val mockModel = mock<GenerativeModel> {
             onBlocking { generateContent(any<String>()) } doReturn mockResponse
         }
-        return FirebaseAiFoodExtractionRepositoryImpl(mockModel, moshi) to mockModel
+        val mockAuth = mock<FirebaseAuth> {
+            on { currentUser } doReturn mock<FirebaseUser>()
+        }
+        return FirebaseAiFoodExtractionRepositoryImpl(mockModel, mockAuth, moshi) to mockModel
     }
 
     @Test

@@ -14,4 +14,7 @@ interface FoodRepository {
     fun getFoodsByCategory(category: FoodCategory): Flow<Result<List<Food>>>
     fun getExpiringSoonFoods(limit: Int? = null): Flow<Result<List<Food>>>
     fun getCategorySummaries(): Flow<Result<List<CategorySummary>>>
+    suspend fun deleteFood(foodId: Long): Result<Unit>
+    suspend fun deleteFoods(foodIds: List<Long>): Result<Unit>
+    fun getFoodById(foodId: Long): Flow<Result<Food?>>
 }

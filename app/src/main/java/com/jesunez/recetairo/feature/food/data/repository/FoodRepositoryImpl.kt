@@ -72,6 +72,27 @@ class FoodRepositoryImpl @Inject constructor(
             }
             .catch { e -> emit(Result.Error(e)) }
 
+    override suspend fun deleteFood(foodId: Long): Result<Unit> = try {
+        foodDao.deleteById(foodId)
+        Result.Success(Unit)
+    } catch (e: Exception) {
+        Result.Error(e)
+    }
+
+    override suspend fun deleteFoods(foodIds: List<Long>): Result<Unit> = try {
+        foodDao.deleteByIds(foodIds)
+        Result.Success(Unit)
+    } catch (e: Exception) {
+        Result.Error(e)
+    }
+
+    override fun getFoodById(foodId: Long): Flow<Result<Food?>> =
+        foodDao.getById(foodId)
+            .map<FoodEntity?, Result<Food?>> { entity ->
+                Result.Success(entity?.toDomain())
+            }
+            .catch { e -> emit(Result.Error(e)) }
+
     private companion object {
         const val EXPIRING_SOON_THRESHOLD_DAYS = 7L
     }

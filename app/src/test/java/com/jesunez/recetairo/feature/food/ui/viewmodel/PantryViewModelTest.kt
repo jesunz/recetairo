@@ -53,6 +53,12 @@ class PantryViewModelTest {
         override fun getExpiringSoonFoods(limit: Int?): Flow<Result<List<Food>>> = expiringSoonFoods
         override fun getCategorySummaries(): Flow<Result<List<CategorySummary>>> =
             throw UnsupportedOperationException()
+        override suspend fun deleteFood(foodId: Long): Result<Unit> =
+            throw UnsupportedOperationException()
+        override suspend fun deleteFoods(foodIds: List<Long>): Result<Unit> =
+            throw UnsupportedOperationException()
+        override fun getFoodById(foodId: Long): Flow<Result<Food?>> =
+            throw UnsupportedOperationException()
     }
 
     private fun buildViewModel(
