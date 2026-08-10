@@ -179,4 +179,110 @@ class PantryViewModelTest {
         assertEquals(foods, state.foods)
         assertTrue(!state.isLoading)
     }
+
+    // endregion
+
+    // region Modo_Seleccion (R1, R2, R4, R5)
+
+    @Test
+    fun should_enterSelectionMode_when_rowLongPressed() = runTest(testDispatcher) {
+        // Given
+        val viewModel = buildViewModel(SavedStateHandle())
+        runCurrent()
+
+        // When
+        viewModel.onRowLongPressed(1L)
+
+        // Then
+        val state = viewModel.uiState.value
+        assertTrue(state.isSelectionMode)
+        assertEquals(setOf(1L), state.selectedIds)
+    }
+
+    @Test
+    fun should_toggleSelection_when_rowTappedInSelectionMode() = runTest(testDispatcher) {
+        // Given
+        val viewModel = buildViewModel(SavedStateHandle())
+        runCurrent()
+        viewModel.onRowLongPressed(1L)
+
+        // When: tocar una fila distinta la añade a la selección
+        viewModel.onRowTapped(2L)
+
+        // Then
+        assertEquals(setOf(1L, 2L), viewModel.uiState.value.selectedIds)
+
+        // When: volver a tocar la misma fila la quita de la selección
+        viewModel.onRowTapped(2L)
+
+        // Then
+        assertEquals(setOf(1L), viewModel.uiState.value.selectedIds)
+    }
+
+    @Test
+    fun should_exitSelectionMode_when_lastSelectionRemoved() = runTest(testDispatcher) {
+        // Given
+        val viewModel = buildViewModel(SavedStateHandle())
+        runCurrent()
+        viewModel.onRowLongPressed(1L)
+
+        // When
+        viewModel.onRowTapped(1L)
+
+        // Then
+        val state = viewModel.uiState.value
+        assertTrue(!state.isSelectionMode)
+        assertTrue(state.selectedIds.isEmpty())
+    }
+
+    @Test
+    fun should_exitSelectionMode_when_selectionCleared() = runTest(testDispatcher) {
+        // Given
+        val viewModel = buildViewModel(SavedStateHandle())
+        runCurrent()
+        viewModel.onRowLongPressed(1L)
+        viewModel.onRowTapped(2L)
+
+        // When
+        viewModel.onSelectionCleared()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertTrue(!state.isSelectionMode)
+        assertTrue(state.selectedIds.isEmpty())
+    }
+
+    @Test
+    fun should_setPendingDeleteCount_when_deleteSelectedClicked() = runTest(testDispatcher) {
+        // Given
+        val viewModel = buildViewModel(SavedStateHandle())
+        runCurrent()
+        viewModel.onRowLongPressed(1L)
+        viewModel.onRowTapped(2L)
+
+        // When
+        viewModel.onDeleteSelectedClicked()
+
+        // Then
+        assertEquals(2, viewModel.uiState.value.pendingDeleteCount)
+    }
+
+    @Test
+    fun should_clearPendingDeleteCount_when_deleteCancelled() = runTest(testDispatcher) {
+        // Given
+        val viewModel = buildViewModel(SavedStateHandle())
+        runCurrent()
+        viewModel.onRowLongPressed(1L)
+        viewModel.onDeleteSelectedClicked()
+
+        // When
+        viewModel.onDeleteCancelled()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertNull(state.pendingDeleteCount)
+        assertEquals(setOf(1L), state.selectedIds)
+    }
+
+    // endregion
 }
