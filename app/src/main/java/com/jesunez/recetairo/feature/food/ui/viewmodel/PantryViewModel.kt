@@ -7,6 +7,7 @@ import com.jesunez.recetairo.core.domain.model.Result
 import com.jesunez.recetairo.feature.food.domain.model.Food
 import com.jesunez.recetairo.feature.food.domain.model.FoodCategory
 import com.jesunez.recetairo.feature.food.domain.model.PantryFilter
+import com.jesunez.recetairo.feature.food.domain.usecase.DeleteFoodsUseCase
 import com.jesunez.recetairo.feature.food.domain.usecase.GetAllFoodsUseCase
 import com.jesunez.recetairo.feature.food.domain.usecase.GetExpiringSoonFoodsUseCase
 import com.jesunez.recetairo.feature.food.domain.usecase.GetFoodsByCategoryUseCase
@@ -25,7 +26,8 @@ class PantryViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val getAllFoodsUseCase: GetAllFoodsUseCase,
     private val getFoodsByCategoryUseCase: GetFoodsByCategoryUseCase,
-    private val getExpiringSoonFoodsUseCase: GetExpiringSoonFoodsUseCase
+    private val getExpiringSoonFoodsUseCase: GetExpiringSoonFoodsUseCase,
+    private val deleteFoodsUseCase: DeleteFoodsUseCase
 ) : ViewModel() {
 
     private val filter: PantryFilter = savedStateHandle.toPantryFilter()
@@ -93,6 +95,29 @@ class PantryViewModel @Inject constructor(
 
     fun onDeleteCancelled() {
         _uiState.update { it.copy(pendingDeleteCount = null) }
+    }
+
+    fun onDeleteConfirmed() {
+        val idsToDelete = _uiState.value.selectedIds
+        viewModelScope.launch {
+            when (val result = deleteFoodsUseCase(idsToDelete.toList())) {
+                is Result.Success -> _uiState.update {
+                    it.copy(
+                        selectedIds = emptySet(),
+                        pendingDeleteCount = null,
+                        deleteResultMessage = "${idsToDelete.size} alimento(s) eliminado(s)."
+                    )
+                }
+                is Result.Error -> _uiState.update {
+                    it.copy(
+                        pendingDeleteCount = null,
+                        deleteResultMessage = result.message
+                            ?: "No se han podido eliminar los alimentos seleccionados."
+                    )
+                }
+                is Result.Loading -> Unit
+            }
+        }
     }
 
     private companion object {

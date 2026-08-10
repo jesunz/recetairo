@@ -8,6 +8,7 @@ import com.jesunez.recetairo.feature.food.domain.model.Food
 import com.jesunez.recetairo.feature.food.domain.model.FoodCategory
 import com.jesunez.recetairo.feature.food.domain.model.PantryFilter
 import com.jesunez.recetairo.feature.food.domain.repository.FoodRepository
+import com.jesunez.recetairo.feature.food.domain.usecase.DeleteFoodsUseCase
 import com.jesunez.recetairo.feature.food.domain.usecase.GetAllFoodsUseCase
 import com.jesunez.recetairo.feature.food.domain.usecase.GetExpiringSoonFoodsUseCase
 import com.jesunez.recetairo.feature.food.domain.usecase.GetFoodsByCategoryUseCase
@@ -35,9 +36,11 @@ class PantryViewModelTest {
     private class FakeFoodRepository(
         private val allFoods: Flow<Result<List<Food>>> = flowOf(Result.Success(emptyList())),
         private val foodsByCategory: Flow<Result<List<Food>>> = flowOf(Result.Success(emptyList())),
-        private val expiringSoonFoods: Flow<Result<List<Food>>> = flowOf(Result.Success(emptyList()))
+        private val expiringSoonFoods: Flow<Result<List<Food>>> = flowOf(Result.Success(emptyList())),
+        private val deleteFoodsResult: Result<Unit> = Result.Success(Unit)
     ) : FoodRepository {
         var lastCategoryRequested: FoodCategory? = null
+        var lastDeletedIds: List<Long>? = null
 
         override suspend fun insertFood(food: Food): Result<Unit> =
             throw UnsupportedOperationException()
@@ -55,8 +58,10 @@ class PantryViewModelTest {
             throw UnsupportedOperationException()
         override suspend fun deleteFood(foodId: Long): Result<Unit> =
             throw UnsupportedOperationException()
-        override suspend fun deleteFoods(foodIds: List<Long>): Result<Unit> =
-            throw UnsupportedOperationException()
+        override suspend fun deleteFoods(foodIds: List<Long>): Result<Unit> {
+            lastDeletedIds = foodIds
+            return deleteFoodsResult
+        }
         override fun getFoodById(foodId: Long): Flow<Result<Food?>> =
             throw UnsupportedOperationException()
     }
@@ -68,7 +73,8 @@ class PantryViewModelTest {
         savedStateHandle = savedStateHandle,
         getAllFoodsUseCase = GetAllFoodsUseCase(fakeRepository),
         getFoodsByCategoryUseCase = GetFoodsByCategoryUseCase(fakeRepository),
-        getExpiringSoonFoodsUseCase = GetExpiringSoonFoodsUseCase(fakeRepository)
+        getExpiringSoonFoodsUseCase = GetExpiringSoonFoodsUseCase(fakeRepository),
+        deleteFoodsUseCase = DeleteFoodsUseCase(fakeRepository)
     )
 
     @Before
@@ -282,6 +288,57 @@ class PantryViewModelTest {
         val state = viewModel.uiState.value
         assertNull(state.pendingDeleteCount)
         assertEquals(setOf(1L), state.selectedIds)
+    }
+
+    // endregion
+
+    // region Eliminación confirmada (R6, R7, R8, R9, R10)
+
+    @Test
+    fun should_deleteSelectedFoods_when_confirmed() = runTest(testDispatcher) {
+        // Given
+        val fakeRepository = FakeFoodRepository(deleteFoodsResult = Result.Success(Unit))
+        val viewModel = buildViewModel(SavedStateHandle(), fakeRepository)
+        runCurrent()
+        viewModel.onRowLongPressed(1L)
+        viewModel.onRowTapped(2L)
+        viewModel.onDeleteSelectedClicked()
+
+        // When
+        viewModel.onDeleteConfirmed()
+        runCurrent()
+
+        // Then
+        assertEquals(setOf(1L, 2L), fakeRepository.lastDeletedIds?.toSet())
+        val state = viewModel.uiState.value
+        assertTrue(state.selectedIds.isEmpty())
+        assertTrue(!state.isSelectionMode)
+        assertNull(state.pendingDeleteCount)
+        assertEquals("2 alimento(s) eliminado(s).", state.deleteResultMessage)
+    }
+
+    @Test
+    fun should_keepSelection_when_deleteFails() = runTest(testDispatcher) {
+        // Given
+        val errorMessage = "No se han podido eliminar los alimentos seleccionados."
+        val fakeRepository = FakeFoodRepository(
+            deleteFoodsResult = Result.Error(RuntimeException("db error"), errorMessage)
+        )
+        val viewModel = buildViewModel(SavedStateHandle(), fakeRepository)
+        runCurrent()
+        viewModel.onRowLongPressed(1L)
+        viewModel.onDeleteSelectedClicked()
+
+        // When
+        viewModel.onDeleteConfirmed()
+        runCurrent()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertEquals(setOf(1L), state.selectedIds)
+        assertTrue(state.isSelectionMode)
+        assertNull(state.pendingDeleteCount)
+        assertEquals(errorMessage, state.deleteResultMessage)
     }
 
     // endregion
