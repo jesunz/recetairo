@@ -43,4 +43,10 @@ sealed class Screen(val route: String) {
             PantryFilter.ExpiringSoon -> "$BASE_ROUTE?expiringSoon=true"
         }
     }
+
+    object FoodDetail : Screen("food_detail/{foodId}") {
+        const val BASE_ROUTE = "food_detail"
+
+        fun buildRoute(foodId: Long): String = "$BASE_ROUTE/$foodId"
+    }
 }
