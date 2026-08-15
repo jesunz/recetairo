@@ -63,6 +63,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.jesunez.recetairo.core.ui.component.CategoryDropdown
+import com.jesunez.recetairo.core.ui.component.DateField
 import com.jesunez.recetairo.core.ui.component.NumericQuantityField
 import com.jesunez.recetairo.core.ui.component.UnitDropdown
 import com.jesunez.recetairo.feature.food.domain.model.FoodCategory
@@ -321,6 +322,9 @@ private suspend fun Context.getCameraProvider(): ProcessCameraProvider =
         ProcessCameraProvider.getInstance(this@getCameraProvider).get()
     }
 
+private fun isQuantityValid(quantity: String): Boolean =
+    quantity.replace(',', '.').toDoubleOrNull() != null
+
 @Composable
 private fun OcrItemListView(
     items: List<OcrFoodItem>,
@@ -354,7 +358,9 @@ private fun OcrItemListView(
         item {
             Button(
                 onClick = onConfirmSelection,
-                enabled = !isLoading && items.any { it.isSelected },
+                enabled = !isLoading &&
+                    items.any { it.isSelected } &&
+                    items.none { it.isSelected && !isQuantityValid(it.quantity) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 16.dp)
@@ -437,20 +443,22 @@ private fun OcrItemRow(
                 )
             }
             Row(modifier = Modifier.padding(top = 8.dp)) {
+                val quantityInvalid = item.isSelected && !isQuantityValid(item.quantity)
                 NumericQuantityField(
                     value = item.quantity,
                     onValueChange = { onItemChanged(item.copy(quantity = it)) },
                     modifier = Modifier.weight(1f),
+                    isError = quantityInvalid,
+                    supportingText = if (quantityInvalid) "Obligatorio" else null,
                     fieldContentDescription = "Cantidad del producto"
                 )
                 Spacer(Modifier.width(8.dp))
-                OutlinedTextField(
+                DateField(
                     value = item.expiryDate,
                     onValueChange = { onItemChanged(item.copy(expiryDate = it)) },
-                    label = { Text("Caducidad") },
-                    modifier = Modifier
-                        .weight(1f)
-                        .semantics { contentDescription = "Fecha de caducidad del producto" }
+                    label = "Caducidad",
+                    modifier = Modifier.weight(1f),
+                    fieldContentDescription = "Fecha de caducidad del producto"
                 )
             }
             CategoryDropdown(

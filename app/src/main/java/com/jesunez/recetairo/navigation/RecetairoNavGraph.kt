@@ -32,6 +32,9 @@ fun RecetairoNavGraph(navController: NavHostController = rememberNavController()
                 },
                 onNavigateToPantry = {
                     navController.navigate(Screen.Pantry.buildRoute(PantryFilter.All))
+                },
+                onFoodClick = { foodId ->
+                    navController.navigate(Screen.FoodDetail.buildRoute(foodId))
                 }
             )
         }

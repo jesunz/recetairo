@@ -36,6 +36,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.jesunez.recetairo.core.ui.component.CategoryDropdown
+import com.jesunez.recetairo.core.ui.component.DateField
 import com.jesunez.recetairo.core.ui.component.NumericQuantityField
 import com.jesunez.recetairo.core.ui.component.UnitDropdown
 import com.jesunez.recetairo.feature.food.domain.model.FoodCategory
@@ -186,18 +187,14 @@ fun AddFoodContent(
         )
 
         // Expiry date field (R1, R6, R7)
-        OutlinedTextField(
+        DateField(
             value = state.expiryDate,
             onValueChange = onExpiryDateChanged,
-            label = { Text("Fecha de caducidad (DD/MM/AAAA)") },
+            label = "Fecha de caducidad (DD/MM/AAAA)",
             isError = FoodField.EXPIRY_DATE in state.validationErrors,
-            supportingText = if (FoodField.EXPIRY_DATE in state.validationErrors) {
-                { Text(state.validationErrors.getValue(FoodField.EXPIRY_DATE)) }
-            } else null,
-            modifier = Modifier
-                .fillMaxWidth()
-                .semantics { contentDescription = "Campo fecha de caducidad" },
-            singleLine = true
+            supportingText = state.validationErrors[FoodField.EXPIRY_DATE],
+            modifier = Modifier.fillMaxWidth(),
+            fieldContentDescription = "Campo fecha de caducidad"
         )
 
         // R10: inline error message on save failure

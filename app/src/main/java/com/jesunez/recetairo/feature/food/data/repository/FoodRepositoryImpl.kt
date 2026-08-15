@@ -94,6 +94,6 @@ class FoodRepositoryImpl @Inject constructor(
             .catch { e -> emit(Result.Error(e)) }
 
     private companion object {
-        const val EXPIRING_SOON_THRESHOLD_DAYS = 7L
+        const val EXPIRING_SOON_THRESHOLD_DAYS = 3L
     }
 }
