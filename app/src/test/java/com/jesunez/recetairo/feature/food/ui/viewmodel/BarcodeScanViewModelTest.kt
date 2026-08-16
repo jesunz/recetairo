@@ -74,6 +74,33 @@ class BarcodeScanViewModelTest {
 
     // endregion
 
+    // region Detecciones duplicadas de la cámara tras resolver un código
+
+    @Test
+    fun should_invokeUseCaseOnce_when_sameBarcodeDetectedTwiceAfterResolution() = runTest(testDispatcher) {
+        // Given: la cámara sigue analizando fotogramas y vuelve a detectar el mismo código
+        // después de que la búsqueda ya se haya resuelto (caso real: navegación en curso).
+        var callCount = 0
+        val countingRepository = object : ProductRepository {
+            override suspend fun getProductByBarcode(barcode: String): Result<ProductInfo> {
+                callCount++
+                return Result.Success(ProductInfo(barcode = barcode, name = "Test", brand = null, category = null, imageUrl = null))
+            }
+        }
+        val viewModel = BarcodeScanViewModel(LookupProductByBarcodeUseCase(countingRepository))
+
+        // When
+        viewModel.onBarcodeDetected("1234567890123", Barcode.FORMAT_EAN_13)
+        runCurrent()
+        viewModel.onBarcodeDetected("1234567890123", Barcode.FORMAT_EAN_13)
+        runCurrent()
+
+        // Then: solo se dispara una búsqueda (y por tanto una navegación) por instancia de pantalla
+        assertEquals(1, callCount)
+    }
+
+    // endregion
+
     // region R16 — producto no encontrado
 
     @Test

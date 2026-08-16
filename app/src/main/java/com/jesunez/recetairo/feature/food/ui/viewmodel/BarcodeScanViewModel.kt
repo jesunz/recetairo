@@ -26,6 +26,12 @@ class BarcodeScanViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(BarcodeScanUiState())
     val uiState: StateFlow<BarcodeScanUiState> = _uiState.asStateFlow()
 
+    // La cámara sigue analizando fotogramas mientras Compose desmonta esta pantalla tras
+    // navegar. Sin este cierre, un fotograma posterior puede volver a detectar el mismo
+    // código, disparando una segunda búsqueda y una segunda navegación duplicada antes de
+    // que la primera termine de desmontarse.
+    private var hasResolvedBarcode = false
+
     fun onCameraPermissionResult(granted: Boolean) {
         if (granted) {
             _uiState.update { it.copy(isCameraPermissionGranted = true, error = null) }
@@ -38,7 +44,8 @@ class BarcodeScanViewModel @Inject constructor(
 
     fun onBarcodeDetected(rawValue: String, format: Int) {
         if (format != Barcode.FORMAT_EAN_8 && format != Barcode.FORMAT_EAN_13 && format != Barcode.FORMAT_UPC_A) return
-        if (_uiState.value.isLoading) return
+        if (hasResolvedBarcode || _uiState.value.isLoading) return
+        hasResolvedBarcode = true
         lookupProduct(rawValue)
     }
 
