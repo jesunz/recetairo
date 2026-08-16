@@ -2,8 +2,10 @@
 package com.jesunez.recetairo.feature.food.data.repository
 
 import com.jesunez.recetairo.core.domain.model.Result
+import com.jesunez.recetairo.feature.food.data.dao.CategoryCountRow
 import com.jesunez.recetairo.feature.food.data.dao.FoodDao
 import com.jesunez.recetairo.feature.food.data.entity.FoodEntity
+import com.jesunez.recetairo.feature.food.domain.model.FoodCategory
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
@@ -87,5 +89,28 @@ class FoodRepositoryImplTest {
 
         assertTrue(result is Result.Success)
         assertEquals("Leche", (result as Result.Success).data?.name)
+    }
+
+    @Test
+    fun should_sumCounts_when_multipleRawCategoriesFallBackToSameCategory() = runBlocking {
+        // Rows with different literal `category` text (stale/unrecognized values) can both
+        // fall back to the same FoodCategory via fromLabel(); their counts must add up
+        // instead of the last one silently overwriting the others.
+        val foodDao = mock<FoodDao> {
+            on { getCategoryCounts() } doReturn flowOf(
+                listOf(
+                    CategoryCountRow(category = "Otros", itemCount = 3),
+                    CategoryCountRow(category = "", itemCount = 2),
+                    CategoryCountRow(category = "raw-off-taxonomy", itemCount = 1)
+                )
+            )
+        }
+        val repository = FoodRepositoryImpl(foodDao)
+
+        val result = repository.getCategorySummaries().first()
+
+        assertTrue(result is Result.Success)
+        val otros = (result as Result.Success).data.first { it.category == FoodCategory.OTROS }
+        assertEquals(6, otros.itemCount)
     }
 }

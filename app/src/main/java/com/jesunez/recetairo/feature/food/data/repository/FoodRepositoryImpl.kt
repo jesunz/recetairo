@@ -65,7 +65,12 @@ class FoodRepositoryImpl @Inject constructor(
     override fun getCategorySummaries(): Flow<Result<List<CategorySummary>>> =
         foodDao.getCategoryCounts()
             .map<List<CategoryCountRow>, Result<List<CategorySummary>>> { rows ->
-                val counts = rows.associate { FoodCategory.fromLabel(it.category) to it.itemCount }
+                // Several literal `category` strings (case variants, stale/unrecognized values)
+                // can fall back to the same FoodCategory via fromLabel(); sum their counts
+                // instead of letting one overwrite another.
+                val counts = rows
+                    .groupBy { FoodCategory.fromLabel(it.category) }
+                    .mapValues { (_, group) -> group.sumOf { it.itemCount } }
                 Result.Success(
                     FoodCategory.entries.map { category -> CategorySummary(category, counts[category] ?: 0) }
                 )

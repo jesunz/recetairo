@@ -12,7 +12,7 @@ interface FoodDao {
     @Insert
     suspend fun insert(entity: FoodEntity): Long
 
-    @Query("SELECT name FROM foods WHERE name LIKE '%' || :query || '%' ORDER BY name ASC LIMIT 5")
+    @Query("SELECT DISTINCT name FROM foods WHERE name LIKE '%' || :query || '%' ORDER BY name ASC LIMIT 5")
     fun searchNames(query: String): Flow<List<String>>
 
     @Query("SELECT * FROM foods ORDER BY name ASC")
