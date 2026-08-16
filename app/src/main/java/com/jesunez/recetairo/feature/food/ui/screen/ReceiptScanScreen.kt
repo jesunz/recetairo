@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
@@ -63,6 +64,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.jesunez.recetairo.core.ui.component.CategoryDropdown
+import com.jesunez.recetairo.core.ui.component.ConfirmationDialog
 import com.jesunez.recetairo.core.ui.component.DateField
 import com.jesunez.recetairo.core.ui.component.NumericQuantityField
 import com.jesunez.recetairo.core.ui.component.UnitDropdown
@@ -79,6 +81,7 @@ import timber.log.Timber
 
 @Composable
 fun ReceiptScanScreen(
+    onNavigateBack: () -> Unit,
     onNavigateToAddFood: () -> Unit,
     onFinish: () -> Unit,
     viewModel: ReceiptScanViewModel = hiltViewModel()
@@ -99,6 +102,25 @@ fun ReceiptScanScreen(
         ) == PackageManager.PERMISSION_GRANTED
         viewModel.onCameraPermissionResult(granted)
         if (!granted) permissionLauncher.launch(Manifest.permission.CAMERA)
+    }
+
+    // Warn before discarding the scanned-but-not-yet-confirmed product list on back navigation
+    var showBackConfirmation by remember { mutableStateOf(false) }
+    BackHandler(enabled = state.items.isNotEmpty() && state.insertionSummary == null) {
+        showBackConfirmation = true
+    }
+    if (showBackConfirmation) {
+        ConfirmationDialog(
+            title = "¿Salir sin guardar?",
+            message = "Se perderán los ${state.items.size} productos detectados en el ticket que aún no se han añadido a la despensa.",
+            confirmText = "Salir",
+            cancelText = "Cancelar",
+            onConfirm = {
+                showBackConfirmation = false
+                onNavigateBack()
+            },
+            onCancel = { showBackConfirmation = false }
+        )
     }
 
     ReceiptScanContent(
@@ -442,14 +464,15 @@ private fun OcrItemRow(
                         .semantics { contentDescription = "Nombre del producto" }
                 )
             }
+            val quantityInvalid = item.isSelected && !isQuantityValid(item.quantity)
             Row(modifier = Modifier.padding(top = 8.dp)) {
-                val quantityInvalid = item.isSelected && !isQuantityValid(item.quantity)
                 NumericQuantityField(
                     value = item.quantity,
                     onValueChange = { onItemChanged(item.copy(quantity = it)) },
-                    modifier = Modifier.weight(1f),
+                    // Narrower than the date field: DateField's trailing calendar icon eats into
+                    // its usable width, so give it more of the shared row to avoid clipping "Caducidad"
+                    modifier = Modifier.weight(0.8f),
                     isError = quantityInvalid,
-                    supportingText = if (quantityInvalid) "Obligatorio" else null,
                     fieldContentDescription = "Cantidad del producto"
                 )
                 Spacer(Modifier.width(8.dp))
@@ -457,8 +480,18 @@ private fun OcrItemRow(
                     value = item.expiryDate,
                     onValueChange = { onItemChanged(item.copy(expiryDate = it)) },
                     label = "Caducidad",
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1.2f),
                     fieldContentDescription = "Fecha de caducidad del producto"
+                )
+            }
+            // Shown below the row (not as a per-field supportingText) so both fields keep
+            // the same height regardless of validation state
+            if (quantityInvalid) {
+                Text(
+                    text = "Cantidad obligatoria",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(start = 4.dp, top = 2.dp)
                 )
             }
             CategoryDropdown(

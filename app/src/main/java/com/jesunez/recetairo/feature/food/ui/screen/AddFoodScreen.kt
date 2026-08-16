@@ -138,7 +138,10 @@ fun AddFoodContent(
                 singleLine = true
             )
             DropdownMenu(
-                expanded = showSuggestions,
+                // Also gated on isLoading: closes the instant Guardar is tapped (isLoading flips
+                // synchronously) instead of waiting for nameSuggestions to clear, so the dropdown's
+                // own exit animation has time to finish before onNavigateBack() pops the screen
+                expanded = showSuggestions && !state.isLoading,
                 onDismissRequest = { showSuggestions = false },
                 modifier = Modifier.fillMaxWidth()
             ) {

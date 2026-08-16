@@ -75,6 +75,7 @@ fun RecetairoNavGraph(navController: NavHostController = rememberNavController()
 
         composable(Screen.ReceiptScan.route) {
             ReceiptScanScreen(
+                onNavigateBack = { navController.popBackStack() },
                 onNavigateToAddFood = {
                     navController.navigate(Screen.AddFood.buildRoute()) {
                         popUpTo(Screen.ReceiptScan.route) { inclusive = true }

@@ -10,6 +10,7 @@ import com.jesunez.recetairo.feature.food.domain.repository.FoodRepository
 import com.jesunez.recetairo.feature.food.domain.usecase.InsertFoodUseCase
 import com.jesunez.recetairo.feature.food.domain.usecase.SearchFoodHistoryUseCase
 import com.jesunez.recetairo.feature.food.domain.usecase.ValidateFoodUseCase
+import com.jesunez.recetairo.feature.food.ui.AddFoodUiState
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.bind
 import io.kotest.property.arbitrary.orNull
@@ -108,8 +109,8 @@ class AddFoodViewModelPropertyTest {
                 state.brand
             )
             assertEquals(
-                "R15: la categoría debe pre-rellenarse con el dato recibido",
-                productInfo.category ?: "",
+                "R15: la categoría debe pre-rellenarse con el dato recibido, o dejarse sin modificar si no llega dato",
+                productInfo.category ?: AddFoodUiState().category,
                 state.category
             )
             assertEquals(

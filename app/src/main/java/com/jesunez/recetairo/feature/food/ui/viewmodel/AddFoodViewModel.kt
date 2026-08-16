@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jesunez.recetairo.core.domain.model.Result
 import com.jesunez.recetairo.feature.food.domain.model.Food
+import com.jesunez.recetairo.feature.food.domain.model.FoodCategory
 import com.jesunez.recetairo.feature.food.domain.model.FoodField
 import com.jesunez.recetairo.feature.food.domain.model.ProductInfo
 import com.jesunez.recetairo.feature.food.domain.model.SaveResult
@@ -55,7 +56,13 @@ class AddFoodViewModel @Inject constructor(
                     else searchFoodHistoryUseCase(query)
                 }
                 .collect { suggestions ->
-                    _uiState.update { it.copy(nameSuggestions = suggestions) }
+                    // searchFoodHistoryUseCase is backed by a reactive Room Flow: inserting the
+                    // food being saved invalidates it and it re-emits with the just-saved name
+                    // matching itself, reopening the dropdown while the screen navigates away.
+                    // Once save has succeeded there is nothing left to suggest against, so ignore it.
+                    if (_uiState.value.saveResult != SaveResult.Success) {
+                        _uiState.update { it.copy(nameSuggestions = suggestions) }
+                    }
                 }
         }
     }
@@ -98,6 +105,9 @@ class AddFoodViewModel @Inject constructor(
     }
 
     fun onSaveClicked() {
+        // Dismiss any pending name suggestion so it doesn't linger while the screen navigates away
+        _uiState.update { it.copy(nameSuggestions = emptyList()) }
+
         val state = _uiState.value
         val parseErrors = mutableMapOf<FoodField, String>()
 
@@ -125,7 +135,10 @@ class AddFoodViewModel @Inject constructor(
             name = state.name,
             quantity = quantity!!,
             unit = state.unit,
-            category = state.category,
+            // Normalize to a canonical FoodCategory label so it always matches the
+            // exact-string filter used by getFoodsByCategory, even if the user never
+            // touched the dropdown (default) or it came from a raw barcode-lookup string
+            category = FoodCategory.fromLabel(state.category).label(),
             expiryDate = expiryDate
         )
 
