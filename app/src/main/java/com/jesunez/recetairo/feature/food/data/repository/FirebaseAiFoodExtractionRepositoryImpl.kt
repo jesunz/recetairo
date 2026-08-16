@@ -76,8 +76,19 @@ class FirebaseAiFoodExtractionRepositoryImpl @Inject constructor(
               - "name": the product name as written, cleaned of stray OCR noise. Do not
                 translate it or invent words that are not in the source text, not even
                 when "needsReview" is true.
-              - "quantity": the quantity or pack size if clearly present in the line
-                (e.g. "2", "500g", "6x125ml"); use an empty string if not discernible.
+              - "quantity": ONLY the numeric magnitude, as plain digits (with "." or ","
+                as decimal separator if present), never including any unit letter or
+                symbol (e.g. "500g" -> "500", "1L" -> "1", "6x125ml" -> "6"); use an
+                empty string if no number is discernible.
+              - "unit": exactly one of: "unidades", "gramos", "kilogramos",
+                "mililitros", "litros", "latas", "paquetes", "docena", "barras",
+                "otros". Infer it from the unit written next to the quantity in the
+                line (e.g. "g"/"gr" -> "gramos", "kg" -> "kilogramos", "ml" ->
+                "mililitros", "l"/"L" -> "litros", "lata"/"latas" -> "latas",
+                "pack"/"paquete" -> "paquetes", "docena" -> "docena", "barra"/"barras"
+                -> "barras"). Use "unidades" when the line is a bare count with no
+                explicit unit (e.g. "3 yogures"), and "otros" only when a unit is
+                clearly present but does not match any of the above.
               - "category": exactly one of: "lácteos", "carne", "pescado", "marisco",
                 "frutas", "verduras", "pan", "cereales", "otros". Use "otros" only when
                 none of the other 8 categories clearly apply.
