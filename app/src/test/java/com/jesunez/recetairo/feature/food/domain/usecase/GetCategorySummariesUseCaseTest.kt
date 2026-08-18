@@ -42,6 +42,12 @@ class GetCategorySummariesUseCaseTest {
                 }
                 return flowOf(Result.Success(summaries))
             }
+            override suspend fun deleteFood(foodId: Long): Result<Unit> =
+                throw UnsupportedOperationException()
+            override suspend fun deleteFoods(foodIds: List<Long>): Result<Unit> =
+                throw UnsupportedOperationException()
+            override fun getFoodById(foodId: Long): Flow<Result<Food?>> =
+                throw UnsupportedOperationException()
         }
         return GetCategorySummariesUseCase(fakeRepository)
     }
@@ -114,6 +120,12 @@ class GetCategorySummariesUseCaseTest {
                 throw UnsupportedOperationException()
             override fun getCategorySummaries(): Flow<Result<List<CategorySummary>>> =
                 flowOf(Result.Error(exception))
+            override suspend fun deleteFood(foodId: Long): Result<Unit> =
+                throw UnsupportedOperationException()
+            override suspend fun deleteFoods(foodIds: List<Long>): Result<Unit> =
+                throw UnsupportedOperationException()
+            override fun getFoodById(foodId: Long): Flow<Result<Food?>> =
+                throw UnsupportedOperationException()
         }
         val useCase = GetCategorySummariesUseCase(fakeRepository)
 

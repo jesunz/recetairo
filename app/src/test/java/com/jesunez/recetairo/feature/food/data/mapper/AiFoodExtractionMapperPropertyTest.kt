@@ -3,6 +3,7 @@ package com.jesunez.recetairo.feature.food.data.mapper
 
 import com.jesunez.recetairo.feature.food.data.dto.AiFoodItemDto
 import com.jesunez.recetairo.feature.food.domain.model.FoodCategory
+import com.jesunez.recetairo.feature.food.domain.model.FoodUnit
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.boolean
 import io.kotest.property.arbitrary.filter
@@ -15,6 +16,29 @@ import org.junit.Test
 class AiFoodExtractionMapperPropertyTest {
 
     private val validLabels = FoodCategory.entries.map { it.label() }
+    private val validUnitLabels = FoodUnit.entries.map { it.label() }
+
+    @Test
+    fun should_mapToUnidades_when_unitDoesNotMatchAnyValidLabel() {
+        // Mirrors P10 for FoodUnit: any unit string not matching one of the valid labels
+        // maps to UNIDADES, the same fallback OcrFoodItem already defaults to.
+        runBlocking {
+            checkAll(
+                100,
+                Arb.string().filter { candidate -> validUnitLabels.none { it.equals(candidate, ignoreCase = true) } }
+            ) { unit ->
+                val dto = AiFoodItemDto(name = "item", quantity = null, unit = unit, category = "otros")
+
+                val result = dto.toDomain()
+
+                assertEquals(
+                    "An unrecognized unit label must fall back to FoodUnit.UNIDADES",
+                    FoodUnit.UNIDADES,
+                    result.unit
+                )
+            }
+        }
+    }
 
     @Test
     fun should_mapToOtros_when_categoryDoesNotMatchAnyValidLabel() {

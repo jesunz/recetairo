@@ -15,17 +15,21 @@ class ProductRepositoryImpl @Inject constructor(
 
     override suspend fun getProductByBarcode(barcode: String): Result<ProductInfo> = try {
         val response = apiService.getProduct(barcode)
-        if (response.status == 0) {
+        val name = response.product?.productName?.takeIf { it.isNotBlank() }
+        if (response.status == 0 || name == null) {
+            // OFF can return status=1 with no usable product_name (e.g. less popular barcodes);
+            // treat that the same as "not found" so the user gets the same explicit banner
+            // instead of silently landing on an empty-looking form
             Result.Error(ProductNotFoundException(barcode))
         } else {
             val product = response.product
             Result.Success(
                 ProductInfo(
                     barcode = barcode,
-                    name = product?.productName,
+                    name = name,
                     brand = null,
-                    category = product?.categories,
-                    imageUrl = product?.imageUrl
+                    category = product.categories,
+                    imageUrl = product.imageUrl
                 )
             )
         }

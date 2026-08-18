@@ -65,14 +65,40 @@ class FoodRepositoryImpl @Inject constructor(
     override fun getCategorySummaries(): Flow<Result<List<CategorySummary>>> =
         foodDao.getCategoryCounts()
             .map<List<CategoryCountRow>, Result<List<CategorySummary>>> { rows ->
-                val counts = rows.associate { FoodCategory.fromLabel(it.category) to it.itemCount }
+                // Several literal `category` strings (case variants, stale/unrecognized values)
+                // can fall back to the same FoodCategory via fromLabel(); sum their counts
+                // instead of letting one overwrite another.
+                val counts = rows
+                    .groupBy { FoodCategory.fromLabel(it.category) }
+                    .mapValues { (_, group) -> group.sumOf { it.itemCount } }
                 Result.Success(
                     FoodCategory.entries.map { category -> CategorySummary(category, counts[category] ?: 0) }
                 )
             }
             .catch { e -> emit(Result.Error(e)) }
 
+    override suspend fun deleteFood(foodId: Long): Result<Unit> = try {
+        foodDao.deleteById(foodId)
+        Result.Success(Unit)
+    } catch (e: Exception) {
+        Result.Error(e)
+    }
+
+    override suspend fun deleteFoods(foodIds: List<Long>): Result<Unit> = try {
+        foodDao.deleteByIds(foodIds)
+        Result.Success(Unit)
+    } catch (e: Exception) {
+        Result.Error(e)
+    }
+
+    override fun getFoodById(foodId: Long): Flow<Result<Food?>> =
+        foodDao.getById(foodId)
+            .map<FoodEntity?, Result<Food?>> { entity ->
+                Result.Success(entity?.toDomain())
+            }
+            .catch { e -> emit(Result.Error(e)) }
+
     private companion object {
-        const val EXPIRING_SOON_THRESHOLD_DAYS = 7L
+        const val EXPIRING_SOON_THRESHOLD_DAYS = 3L
     }
 }

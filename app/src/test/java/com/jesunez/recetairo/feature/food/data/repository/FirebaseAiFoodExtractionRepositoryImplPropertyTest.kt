@@ -3,7 +3,10 @@ package com.jesunez.recetairo.feature.food.data.repository
 
 import com.google.firebase.ai.GenerativeModel
 import com.google.firebase.ai.type.GenerateContentResponse
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.jesunez.recetairo.core.domain.model.Result
+import com.jesunez.recetairo.feature.food.domain.model.FoodUnit
 import com.squareup.moshi.Moshi
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.list
@@ -32,7 +35,10 @@ class FirebaseAiFoodExtractionRepositoryImplPropertyTest {
         val mockModel = mock<GenerativeModel> {
             onBlocking { generateContent(any<String>()) } doReturn mockResponse
         }
-        return FirebaseAiFoodExtractionRepositoryImpl(mockModel, moshi) to mockModel
+        val mockAuth = mock<FirebaseAuth> {
+            on { currentUser } doReturn mock<FirebaseUser>()
+        }
+        return FirebaseAiFoodExtractionRepositoryImpl(mockModel, mockAuth, moshi) to mockModel
     }
 
     @Test
@@ -88,6 +94,25 @@ class FirebaseAiFoodExtractionRepositoryImplPropertyTest {
                     items.single().needsReview
                 )
             }
+        }
+    }
+
+    @Test
+    fun should_splitQuantityAndUnit_when_modelReturnsThemAsSeparateFields() {
+        // Regression: the model used to be prompted to pack the unit into "quantity"
+        // (e.g. "500g"), which OcrFoodItem's numeric quantity field then rejected as
+        // invalid. "quantity" and "unit" are now separate fields in the schema/prompt.
+        val responseJson = """[{"name":"Leche","quantity":"500","unit":"gramos","category":"lácteos"}]"""
+        val (repository, _) = buildRepository(responseJson)
+
+        runBlocking {
+            val result = repository.extractFoodItems("irrelevant raw text")
+
+            assertTrue("Result must be Success but was: $result", result is Result.Success)
+            val item = (result as Result.Success).data.single()
+
+            assertEquals("500", item.quantity)
+            assertEquals(FoodUnit.GRAMOS, item.unit)
         }
     }
 

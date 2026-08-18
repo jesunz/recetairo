@@ -43,6 +43,12 @@ class GetExpiringSoonFoodsUseCaseTest {
             }
             override fun getCategorySummaries(): Flow<Result<List<CategorySummary>>> =
                 throw UnsupportedOperationException()
+            override suspend fun deleteFood(foodId: Long): Result<Unit> =
+                throw UnsupportedOperationException()
+            override suspend fun deleteFoods(foodIds: List<Long>): Result<Unit> =
+                throw UnsupportedOperationException()
+            override fun getFoodById(foodId: Long): Flow<Result<Food?>> =
+                throw UnsupportedOperationException()
         }
         return GetExpiringSoonFoodsUseCase(fakeRepository)
     }
@@ -126,6 +132,12 @@ class GetExpiringSoonFoodsUseCaseTest {
             override fun getExpiringSoonFoods(limit: Int?): Flow<Result<List<Food>>> =
                 flowOf(Result.Error(exception))
             override fun getCategorySummaries(): Flow<Result<List<CategorySummary>>> =
+                throw UnsupportedOperationException()
+            override suspend fun deleteFood(foodId: Long): Result<Unit> =
+                throw UnsupportedOperationException()
+            override suspend fun deleteFoods(foodIds: List<Long>): Result<Unit> =
+                throw UnsupportedOperationException()
+            override fun getFoodById(foodId: Long): Flow<Result<Food?>> =
                 throw UnsupportedOperationException()
         }
         val useCase = GetExpiringSoonFoodsUseCase(fakeRepository)

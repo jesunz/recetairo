@@ -7,6 +7,7 @@ import com.google.firebase.ai.type.Schema
 import com.google.firebase.ai.type.generationConfig
 import com.google.firebase.auth.FirebaseAuth
 import com.jesunez.recetairo.feature.food.domain.model.FoodCategory
+import com.jesunez.recetairo.feature.food.domain.model.FoodUnit
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -30,6 +31,7 @@ object FirebaseAiModule {
             properties = mapOf(
                 "name" to Schema.string(),
                 "quantity" to Schema.string(),
+                "unit" to Schema.enumeration(FoodUnit.entries.map { it.label() }),
                 "category" to Schema.enumeration(FoodCategory.entries.map { it.label() }),
                 "needsReview" to Schema.boolean()
             ),

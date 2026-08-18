@@ -33,6 +33,7 @@ fun HomeScreen(
     onCategoryClick: (FoodCategory) -> Unit,
     onViewAllExpiringClick: () -> Unit,
     onNavigateToPantry: () -> Unit,
+    onFoodClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
@@ -45,6 +46,7 @@ fun HomeScreen(
         onCategoryClick = onCategoryClick,
         onViewAllExpiringClick = onViewAllExpiringClick,
         onNavigateToPantry = onNavigateToPantry,
+        onFoodClick = onFoodClick,
         modifier = modifier
     )
 }
@@ -58,6 +60,7 @@ fun HomeContent(
     onCategoryClick: (FoodCategory) -> Unit,
     onViewAllExpiringClick: () -> Unit,
     onNavigateToPantry: () -> Unit,
+    onFoodClick: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -89,7 +92,8 @@ fun HomeContent(
             if (uiState.expiringSoonFoods.isNotEmpty()) {
                 ExpiringSoonSection(
                     items = uiState.expiringSoonFoods,
-                    onViewAllClick = onViewAllExpiringClick
+                    onViewAllClick = onViewAllExpiringClick,
+                    onItemClick = onFoodClick
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -125,7 +129,8 @@ fun HomeScreenPreview() {
             onScanReceipt = {},
             onCategoryClick = {},
             onViewAllExpiringClick = {},
-            onNavigateToPantry = {}
+            onNavigateToPantry = {},
+            onFoodClick = {}
         )
     }
 }

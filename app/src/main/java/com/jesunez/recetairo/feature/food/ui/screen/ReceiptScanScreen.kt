@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -63,6 +65,8 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.jesunez.recetairo.core.ui.component.CategoryDropdown
+import com.jesunez.recetairo.core.ui.component.ConfirmationDialog
+import com.jesunez.recetairo.core.ui.component.DateField
 import com.jesunez.recetairo.core.ui.component.NumericQuantityField
 import com.jesunez.recetairo.core.ui.component.UnitDropdown
 import com.jesunez.recetairo.feature.food.domain.model.FoodCategory
@@ -78,6 +82,7 @@ import timber.log.Timber
 
 @Composable
 fun ReceiptScanScreen(
+    onNavigateBack: () -> Unit,
     onNavigateToAddFood: () -> Unit,
     onFinish: () -> Unit,
     viewModel: ReceiptScanViewModel = hiltViewModel()
@@ -98,6 +103,25 @@ fun ReceiptScanScreen(
         ) == PackageManager.PERMISSION_GRANTED
         viewModel.onCameraPermissionResult(granted)
         if (!granted) permissionLauncher.launch(Manifest.permission.CAMERA)
+    }
+
+    // Warn before discarding the scanned-but-not-yet-confirmed product list on back navigation
+    var showBackConfirmation by remember { mutableStateOf(false) }
+    BackHandler(enabled = state.items.isNotEmpty() && state.insertionSummary == null) {
+        showBackConfirmation = true
+    }
+    if (showBackConfirmation) {
+        ConfirmationDialog(
+            title = "¿Salir sin guardar?",
+            message = "Se perderán los ${state.items.size} productos detectados en el ticket que aún no se han añadido a la despensa.",
+            confirmText = "Salir",
+            cancelText = "Cancelar",
+            onConfirm = {
+                showBackConfirmation = false
+                onNavigateBack()
+            },
+            onCancel = { showBackConfirmation = false }
+        )
     }
 
     ReceiptScanContent(
@@ -182,6 +206,7 @@ private fun PermissionRationaleView(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .statusBarsPadding()
             .verticalScroll(rememberScrollState())
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -321,6 +346,9 @@ private suspend fun Context.getCameraProvider(): ProcessCameraProvider =
         ProcessCameraProvider.getInstance(this@getCameraProvider).get()
     }
 
+private fun isQuantityValid(quantity: String): Boolean =
+    quantity.replace(',', '.').toDoubleOrNull() != null
+
 @Composable
 private fun OcrItemListView(
     items: List<OcrFoodItem>,
@@ -334,6 +362,7 @@ private fun OcrItemListView(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
+            .statusBarsPadding()
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -354,7 +383,9 @@ private fun OcrItemListView(
         item {
             Button(
                 onClick = onConfirmSelection,
-                enabled = !isLoading && items.any { it.isSelected },
+                enabled = !isLoading &&
+                    items.any { it.isSelected } &&
+                    items.none { it.isSelected && !isQuantityValid(it.quantity) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 16.dp)
@@ -436,21 +467,34 @@ private fun OcrItemRow(
                         .semantics { contentDescription = "Nombre del producto" }
                 )
             }
+            val quantityInvalid = item.isSelected && !isQuantityValid(item.quantity)
             Row(modifier = Modifier.padding(top = 8.dp)) {
                 NumericQuantityField(
                     value = item.quantity,
                     onValueChange = { onItemChanged(item.copy(quantity = it)) },
-                    modifier = Modifier.weight(1f),
+                    // Narrower than the date field: DateField's trailing calendar icon eats into
+                    // its usable width, so give it more of the shared row to avoid clipping "Caducidad"
+                    modifier = Modifier.weight(0.8f),
+                    isError = quantityInvalid,
                     fieldContentDescription = "Cantidad del producto"
                 )
                 Spacer(Modifier.width(8.dp))
-                OutlinedTextField(
+                DateField(
                     value = item.expiryDate,
                     onValueChange = { onItemChanged(item.copy(expiryDate = it)) },
-                    label = { Text("Caducidad") },
-                    modifier = Modifier
-                        .weight(1f)
-                        .semantics { contentDescription = "Fecha de caducidad del producto" }
+                    label = "Caducidad",
+                    modifier = Modifier.weight(1.2f),
+                    fieldContentDescription = "Fecha de caducidad del producto"
+                )
+            }
+            // Shown below the row (not as a per-field supportingText) so both fields keep
+            // the same height regardless of validation state
+            if (quantityInvalid) {
+                Text(
+                    text = "Cantidad obligatoria",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(start = 4.dp, top = 2.dp)
                 )
             }
             CategoryDropdown(
@@ -486,6 +530,7 @@ private fun InsertionSummaryView(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .statusBarsPadding()
             .verticalScroll(rememberScrollState())
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

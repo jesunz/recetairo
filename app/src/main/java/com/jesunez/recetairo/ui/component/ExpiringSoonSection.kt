@@ -1,6 +1,7 @@
 package com.jesunez.recetairo.ui.component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,7 +44,8 @@ import java.time.temporal.ChronoUnit
 fun ExpiringSoonSection(
     items: List<Food>,
     modifier: Modifier = Modifier,
-    onViewAllClick: () -> Unit = {}
+    onViewAllClick: () -> Unit = {},
+    onItemClick: (Long) -> Unit = {}
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
@@ -77,7 +79,7 @@ fun ExpiringSoonSection(
             modifier = Modifier.padding(top = 8.dp)
         ) {
             items(items, key = { it.id }) { food ->
-                ExpiringFoodCard(food = food)
+                ExpiringFoodCard(food = food, onClick = { onItemClick(food.id) })
             }
         }
     }
@@ -86,6 +88,7 @@ fun ExpiringSoonSection(
 @Composable
 private fun ExpiringFoodCard(
     food: Food,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     // Invariant: R3/GetExpiringSoonFoodsUseCase only return foods with a non-null expiryDate.
@@ -103,6 +106,7 @@ private fun ExpiringFoodCard(
     Card(
         modifier = modifier
             .width(256.dp)
+            .clickable(onClick = onClick)
             .semantics(mergeDescendants = true) {
                 contentDescription = "${food.name}, $expiryText"
             },

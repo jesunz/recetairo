@@ -11,6 +11,7 @@ import com.jesunez.recetairo.feature.food.domain.model.PantryFilter
 import com.jesunez.recetairo.feature.food.domain.model.ProductInfo
 import com.jesunez.recetairo.feature.food.ui.screen.AddFoodScreen
 import com.jesunez.recetairo.feature.food.ui.screen.BarcodeScanScreen
+import com.jesunez.recetairo.feature.food.ui.screen.FoodDetailScreen
 import com.jesunez.recetairo.feature.food.ui.screen.PantryScreen
 import com.jesunez.recetairo.feature.food.ui.screen.ReceiptScanScreen
 import com.jesunez.recetairo.ui.screen.HomeScreen
@@ -31,6 +32,9 @@ fun RecetairoNavGraph(navController: NavHostController = rememberNavController()
                 },
                 onNavigateToPantry = {
                     navController.navigate(Screen.Pantry.buildRoute(PantryFilter.All))
+                },
+                onFoodClick = { foodId ->
+                    navController.navigate(Screen.FoodDetail.buildRoute(foodId))
                 }
             )
         }
@@ -43,6 +47,18 @@ fun RecetairoNavGraph(navController: NavHostController = rememberNavController()
             )
         ) {
             PantryScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onFoodClick = { foodId ->
+                    navController.navigate(Screen.FoodDetail.buildRoute(foodId))
+                }
+            )
+        }
+
+        composable(
+            route = Screen.FoodDetail.route,
+            arguments = listOf(navArgument("foodId") { type = NavType.LongType })
+        ) {
+            FoodDetailScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
@@ -59,6 +75,7 @@ fun RecetairoNavGraph(navController: NavHostController = rememberNavController()
 
         composable(Screen.ReceiptScan.route) {
             ReceiptScanScreen(
+                onNavigateBack = { navController.popBackStack() },
                 onNavigateToAddFood = {
                     navController.navigate(Screen.AddFood.buildRoute()) {
                         popUpTo(Screen.ReceiptScan.route) { inclusive = true }
