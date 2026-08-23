@@ -14,6 +14,7 @@ import com.jesunez.recetairo.feature.food.ui.screen.BarcodeScanScreen
 import com.jesunez.recetairo.feature.food.ui.screen.FoodDetailScreen
 import com.jesunez.recetairo.feature.food.ui.screen.PantryScreen
 import com.jesunez.recetairo.feature.food.ui.screen.ReceiptScanScreen
+import com.jesunez.recetairo.feature.recipe.ui.screen.RecipeListScreen
 import com.jesunez.recetairo.ui.screen.HomeScreen
 
 @Composable
@@ -33,8 +34,23 @@ fun RecetairoNavGraph(navController: NavHostController = rememberNavController()
                 onNavigateToPantry = {
                     navController.navigate(Screen.Pantry.buildRoute(PantryFilter.All))
                 },
+                onNavigateToRecipes = {
+                    navController.navigate(Screen.RecipeList.route)
+                },
                 onFoodClick = { foodId ->
                     navController.navigate(Screen.FoodDetail.buildRoute(foodId))
+                }
+            )
+        }
+
+        composable(Screen.RecipeList.route) {
+            RecipeListScreen(
+                onGenerateClick = {
+                    // TODO: navegar a Screen.IngredientSelection (Selector_Ingredientes),
+                    // creado en T20 junto con el resto de pantallas de generación con IA
+                },
+                onRecipeClick = { recipeId ->
+                    navController.navigate(Screen.RecipeDetail.buildRoute(recipeId))
                 }
             )
         }

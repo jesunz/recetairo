@@ -49,4 +49,12 @@ sealed class Screen(val route: String) {
 
         fun buildRoute(foodId: Long): String = "$BASE_ROUTE/$foodId"
     }
+
+    object RecipeList : Screen("recipe_list")
+
+    object RecipeDetail : Screen("recipe_detail/{recipeId}") {
+        const val BASE_ROUTE = "recipe_detail"
+
+        fun buildRoute(recipeId: Long): String = "$BASE_ROUTE/$recipeId"
+    }
 }
