@@ -52,6 +52,15 @@ sealed class Screen(val route: String) {
 
     object RecipeList : Screen("recipe_list")
 
+    object IngredientSelection : Screen("ingredient_selection")
+
+    object GeneratedRecipes : Screen("generated_recipes/{ingredientNames}") {
+        const val BASE_ROUTE = "generated_recipes"
+
+        fun buildRoute(ingredientNames: List<String>): String =
+            "$BASE_ROUTE/${ingredientNames.joinToString(",").encode()}"
+    }
+
     object RecipeDetail : Screen("recipe_detail/{recipeId}") {
         const val BASE_ROUTE = "recipe_detail"
 

@@ -14,6 +14,8 @@ import com.jesunez.recetairo.feature.food.ui.screen.BarcodeScanScreen
 import com.jesunez.recetairo.feature.food.ui.screen.FoodDetailScreen
 import com.jesunez.recetairo.feature.food.ui.screen.PantryScreen
 import com.jesunez.recetairo.feature.food.ui.screen.ReceiptScanScreen
+import com.jesunez.recetairo.feature.recipe.ui.screen.GeneratedRecipesScreen
+import com.jesunez.recetairo.feature.recipe.ui.screen.IngredientSelectionScreen
 import com.jesunez.recetairo.feature.recipe.ui.screen.RecipeListScreen
 import com.jesunez.recetairo.ui.screen.HomeScreen
 
@@ -46,11 +48,39 @@ fun RecetairoNavGraph(navController: NavHostController = rememberNavController()
         composable(Screen.RecipeList.route) {
             RecipeListScreen(
                 onGenerateClick = {
-                    // TODO: navegar a Screen.IngredientSelection (Selector_Ingredientes),
-                    // creado en T20 junto con el resto de pantallas de generación con IA
+                    navController.navigate(Screen.IngredientSelection.route)
                 },
                 onRecipeClick = { recipeId ->
                     navController.navigate(Screen.RecipeDetail.buildRoute(recipeId))
+                }
+            )
+        }
+
+        composable(Screen.IngredientSelection.route) {
+            IngredientSelectionScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onGenerateRecipeClick = { ingredientNames ->
+                    navController.navigate(Screen.GeneratedRecipes.buildRoute(ingredientNames))
+                }
+            )
+        }
+
+        composable(
+            route = Screen.GeneratedRecipes.route,
+            arguments = listOf(navArgument("ingredientNames") { type = NavType.StringType })
+        ) {
+            GeneratedRecipesScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onRecipeClick = {
+                    // TODO: navegar a Screen.RecipeDetail con generatedIndex una vez la ruta se
+                    // extienda con ese argumento opcional en T25, junto con
+                    // RecipeDetailViewModel/RecipeDetailScreen de T23/T24, que hoy tampoco saben
+                    // resolver una receta no guardada por índice
+                },
+                onSavedSuccessfully = {
+                    // R20: tras guardar, vuelta a Menu_Recetas — descarta Selector_Ingredientes y
+                    // Recetas_Generadas de la pila
+                    navController.popBackStack(Screen.RecipeList.route, false)
                 }
             )
         }
