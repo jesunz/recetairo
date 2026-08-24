@@ -16,6 +16,7 @@ import com.jesunez.recetairo.feature.food.ui.screen.PantryScreen
 import com.jesunez.recetairo.feature.food.ui.screen.ReceiptScanScreen
 import com.jesunez.recetairo.feature.recipe.ui.screen.GeneratedRecipesScreen
 import com.jesunez.recetairo.feature.recipe.ui.screen.IngredientSelectionScreen
+import com.jesunez.recetairo.feature.recipe.ui.screen.RecipeDetailScreen
 import com.jesunez.recetairo.feature.recipe.ui.screen.RecipeListScreen
 import com.jesunez.recetairo.ui.screen.HomeScreen
 
@@ -71,17 +72,31 @@ fun RecetairoNavGraph(navController: NavHostController = rememberNavController()
         ) {
             GeneratedRecipesScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onRecipeClick = {
-                    // TODO: navegar a Screen.RecipeDetail con generatedIndex una vez la ruta se
-                    // extienda con ese argumento opcional en T25, junto con
-                    // RecipeDetailViewModel/RecipeDetailScreen de T23/T24, que hoy tampoco saben
-                    // resolver una receta no guardada por índice
+                onRecipeClick = { generatedIndex ->
+                    // R18: navega a Detalle_Receta con generatedIndex — la Receta aún no está
+                    // guardada, RecipeDetailViewModel la resuelve vía GeneratedRecipesCache
+                    navController.navigate(Screen.RecipeDetail.buildRoute(generatedIndex))
                 },
                 onSavedSuccessfully = {
                     // R20: tras guardar, vuelta a Menu_Recetas — descarta Selector_Ingredientes y
                     // Recetas_Generadas de la pila
                     navController.popBackStack(Screen.RecipeList.route, false)
                 }
+            )
+        }
+
+        composable(
+            route = Screen.RecipeDetail.route,
+            arguments = listOf(
+                // NavType.LongType/IntType no admite nullable = true en Navigation Compose;
+                // mismo patrón StringType nullable que Screen.Pantry, parseado a mano en el
+                // ViewModel (mismo criterio que PantryViewModel.toPantryFilter())
+                navArgument("recipeId") { type = NavType.StringType; nullable = true },
+                navArgument("generatedIndex") { type = NavType.StringType; nullable = true }
+            )
+        ) {
+            RecipeDetailScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 

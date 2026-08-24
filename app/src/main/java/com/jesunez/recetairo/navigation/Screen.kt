@@ -61,9 +61,14 @@ sealed class Screen(val route: String) {
             "$BASE_ROUTE/${ingredientNames.joinToString(",").encode()}"
     }
 
-    object RecipeDetail : Screen("recipe_detail/{recipeId}") {
+    // R5/R18: exactamente uno de los dos argumentos está presente en cada navegación — recipeId
+    // desde Menu_Recetas (Receta guardada), generatedIndex desde Recetas_Generadas (Receta aún no
+    // guardada, resuelta vía GeneratedRecipesCache). Mismo patrón de query args nullable que Pantry.
+    object RecipeDetail : Screen("recipe_detail?recipeId={recipeId}&generatedIndex={generatedIndex}") {
         const val BASE_ROUTE = "recipe_detail"
 
-        fun buildRoute(recipeId: Long): String = "$BASE_ROUTE/$recipeId"
+        fun buildRoute(recipeId: Long): String = "$BASE_ROUTE?recipeId=$recipeId"
+
+        fun buildRoute(generatedIndex: Int): String = "$BASE_ROUTE?generatedIndex=$generatedIndex"
     }
 }

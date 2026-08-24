@@ -30,11 +30,12 @@ class RecipeDetailViewModel @Inject constructor(
     private val generatedRecipesCache: GeneratedRecipesCache
 ) : ViewModel() {
 
-    // Screen.RecipeDetail solo acepta "recipeId" hoy; "generatedIndex" anticipa la ruta extendida
-    // que crea T25 (mismo patrón que GeneratedRecipesViewModel de T18 leyendo "ingredientNames"
-    // antes de que Screen.GeneratedRecipes existiera). Exactamente uno de los dos llega no nulo.
-    private val recipeId: Long? = savedStateHandle.get<Long>("recipeId")
-    private val generatedIndex: Int? = savedStateHandle.get<Int>("generatedIndex")
+    // Screen.RecipeDetail declara "recipeId"/"generatedIndex" como StringType nullable (mismo
+    // patrón que "category"/"expiringSoon" de Pantry — NavType.LongType/IntType no admite
+    // nullable = true en Navigation Compose), de ahí el parseo manual aquí. Exactamente uno de los
+    // dos llega no nulo.
+    private val recipeId: Long? = savedStateHandle.get<String>("recipeId")?.toLongOrNull()
+    private val generatedIndex: Int? = savedStateHandle.get<String>("generatedIndex")?.toIntOrNull()
 
     private val _uiState = MutableStateFlow(RecipeDetailUiState())
     val uiState: StateFlow<RecipeDetailUiState> = _uiState.asStateFlow()
