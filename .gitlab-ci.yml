@@ -1,0 +1,158 @@
+stages:
+  - format
+  - static-analysis
+  - test
+  - build
+  - security
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_COMMIT_TAG'
+
+default:
+  interruptible: true
+  image: mobiledevops/android-sdk-image:latest
+  before_script:
+    - chmod +x ./gradlew
+    - yes | sdkmanager --licenses > /dev/null 2>&1 || true
+    - sdkmanager "platforms;android-36" "build-tools;36.0.0" > /dev/null 2>&1 || true
+
+variables:
+  GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx2g"
+
+cache: &gradle-cache
+  key:
+    files:
+      - gradle/wrapper/gradle-wrapper.properties
+      - gradle/libs.versions.toml
+  paths:
+    - .gradle/wrapper
+    - .gradle/caches
+  policy: pull-push
+
+# --- format ---
+
+ktlint:
+  stage: format
+  cache:
+    <<: *gradle-cache
+    policy: pull
+  script:
+    - ./gradlew ktlintCheck
+  artifacts:
+    when: on_failure
+    paths:
+      - "**/build/reports/ktlint/"
+    expire_in: 1 week
+
+# --- static-analysis ---
+
+detekt:
+  stage: static-analysis
+  cache:
+    <<: *gradle-cache
+    policy: pull
+  # TODO: remove once the pre-existing findings (generic catches, long
+  # composables, etc.) are cleaned up, then this becomes a real gate.
+  allow_failure: true
+  script:
+    - ./gradlew detekt
+  artifacts:
+    when: always
+    paths:
+      - "**/build/reports/detekt/"
+    expire_in: 1 week
+
+android-lint:
+  stage: static-analysis
+  cache:
+    <<: *gradle-cache
+    policy: pull
+  allow_failure: true
+  script:
+    - ./gradlew lintDebug
+  artifacts:
+    when: always
+    paths:
+      - "**/build/reports/lint-results-debug.html"
+    expire_in: 1 week
+
+# --- test ---
+
+unit-tests:
+  stage: test
+  cache:
+    <<: *gradle-cache
+    policy: pull
+  script:
+    - ./gradlew testDebugUnitTest
+  artifacts:
+    when: always
+    reports:
+      junit: "**/build/test-results/testDebugUnitTest/TEST-*.xml"
+    paths:
+      - "**/build/reports/tests/"
+    expire_in: 1 week
+
+# --- build ---
+
+assemble-debug:
+  stage: build
+  script:
+    - ./gradlew assembleDebug
+  artifacts:
+    paths:
+      - app/build/outputs/apk/debug/*.apk
+    expire_in: 1 week
+
+# --- security ---
+
+dependency-vulnerabilities:
+  stage: security
+  cache:
+    <<: *gradle-cache
+    policy: pull
+  allow_failure: true
+  script:
+    - ./gradlew :app:dependencies --configuration debugRuntimeClasspath > /dev/null
+    - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b ./bin
+    - ./bin/trivy fs --scanners vuln --exit-code 0 --format table --output trivy-report.txt "$GRADLE_USER_HOME/caches/modules-2/files-2.1"
+  artifacts:
+    when: always
+    paths:
+      - trivy-report.txt
+    expire_in: 1 week
+
+secret-detection:
+  stage: security
+  image: zricethezav/gitleaks:latest
+  before_script: []
+  allow_failure: true
+  script:
+    - gitleaks detect --source . --report-format json --report-path gitleaks-report.json --exit-code 0 --redact
+  artifacts:
+    when: always
+    paths:
+      - gitleaks-report.json
+    expire_in: 1 week
+
+outdated-dependencies:
+  stage: security
+  cache:
+    <<: *gradle-cache
+    policy: pull
+  allow_failure: true
+  script:
+    - ./gradlew dependencyUpdates -Drevision=release
+  artifacts:
+    when: always
+    paths:
+      - "**/build/dependencyUpdates/"
+    expire_in: 1 week
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: always
+    - when: manual
