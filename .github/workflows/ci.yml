@@ -20,6 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Provide google-services.json
+        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > app/google-services.json
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -44,6 +46,8 @@ jobs:
     continue-on-error: true # TODO: remove once pre-existing findings are cleaned up
     steps:
       - uses: actions/checkout@v4
+      - name: Provide google-services.json
+        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > app/google-services.json
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -68,6 +72,8 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
+      - name: Provide google-services.json
+        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > app/google-services.json
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -92,6 +98,8 @@ jobs:
     needs: ktlint
     steps:
       - uses: actions/checkout@v4
+      - name: Provide google-services.json
+        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > app/google-services.json
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -118,6 +126,8 @@ jobs:
     needs: unit-tests
     steps:
       - uses: actions/checkout@v4
+      - name: Provide google-services.json
+        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > app/google-services.json
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -141,6 +151,8 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
+      - name: Provide google-services.json
+        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > app/google-services.json
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -185,6 +197,8 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
+      - name: Provide google-services.json
+        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > app/google-services.json
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
