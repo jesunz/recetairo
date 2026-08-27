@@ -29,7 +29,7 @@ firebaseBom = "34.16.0"
 googleServices = "4.5.0"
 ktlintGradle = "12.1.1"
 detekt = "1.23.7"
-benManesVersions = "0.51.0"
+benManesVersions = "0.61.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
