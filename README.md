@@ -15,8 +15,9 @@ Logic and calculates how well each recipe matches the food already available.
 - **Browse the pantry**: listing by category, food items expiring soon, and the full pantry, with
   explicit loading/error/empty states.
 - **Manage the pantry**: single and multiple deletion with confirmation, plus a food detail view.
-- **AI recipe generation**: select up to 3 pantry items, generate 3 recipe proposals via Firebase
-  AI Logic, save the chosen recipes, and view recipe details with a pantry-match percentage.
+- **AI recipe generation**: select up to 3 pantry items and a serving count (1-4), generate 3
+  recipe proposals via Firebase AI Logic with ingredient quantities adapted to that serving count,
+  save the chosen recipes, and view recipe details with a pantry-match percentage.
 
 ## Tech stack
 

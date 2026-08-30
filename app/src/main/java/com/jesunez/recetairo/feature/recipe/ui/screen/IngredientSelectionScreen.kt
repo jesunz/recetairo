@@ -20,6 +20,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -74,6 +75,10 @@ fun IngredientSelectionContent(
     onGenerateRecipeClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Raciones solo tiene sentido con la despensa cargada y con contenido (mismo criterio que el
+    // resto del contenido de esta pantalla, R12)
+    val showServingsSelector = !state.isLoading && state.error == null && state.categorized.isNotEmpty()
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
@@ -100,24 +105,30 @@ fun IngredientSelectionContent(
             }
         },
         bottomBar = {
-            Column(modifier = Modifier.padding(16.dp)) {
-                // R8: counter reflecting the current selection, out of the 3-ingredient max
-                Text(
-                    text = "Seleccionados (${state.selectedNames.size}/3)",
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp)
-                )
-                // R9: disabled while no ingredient is selected
-                Button(
-                    onClick = onGenerateRecipeClick,
-                    enabled = state.isGenerateEnabled,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .semantics { contentDescription = "Generar Receta" }
-                ) {
-                    Text("Generar Receta")
+            Column {
+                // Raciones se ancla a la parte inferior de la pantalla, tras las categorías de
+                // alimentos, separada de estas por una barra horizontal (a petición del humano)
+                if (showServingsSelector) {
+                    HorizontalDivider()
+                }
+                Column(modifier = Modifier.padding(16.dp)) {
+                    if (showServingsSelector) {
+                        ServingsSelector(
+                            servings = state.servings,
+                            onServingsSelected = onServingsSelected,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+                    }
+                    // R9: disabled while no ingredient is selected
+                    Button(
+                        onClick = onGenerateRecipeClick,
+                        enabled = state.isGenerateEnabled,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics { contentDescription = "Generar Receta" }
+                    ) {
+                        Text("Generar Receta")
+                    }
                 }
             }
         }
@@ -161,12 +172,15 @@ fun IngredientSelectionContent(
                 }
 
                 else -> Column(modifier = Modifier.fillMaxSize()) {
-                    // R1/R2: servings selector between the header and the ingredient sections,
-                    // visible whenever the pantry has content
-                    ServingsSelector(
-                        servings = state.servings,
-                        onServingsSelected = onServingsSelected,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    // R8: counter reflecting the current selection, out of the 3-ingredient max,
+                    // at the top of the screen, right above the selected ingredients (moved here
+                    // at the human's request)
+                    Text(
+                        text = "Seleccionados (${state.selectedNames.size}/3)",
+                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
                     )
 
                     // Selected ingredients stay visible even if their category is collapsed
