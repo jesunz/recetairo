@@ -54,11 +54,11 @@ sealed class Screen(val route: String) {
 
     object IngredientSelection : Screen("ingredient_selection")
 
-    object GeneratedRecipes : Screen("generated_recipes/{ingredientNames}") {
+    object GeneratedRecipes : Screen("generated_recipes/{ingredientNames}/{servings}") {
         const val BASE_ROUTE = "generated_recipes"
 
-        fun buildRoute(ingredientNames: List<String>): String =
-            "$BASE_ROUTE/${ingredientNames.joinToString(",").encode()}"
+        fun buildRoute(ingredientNames: List<String>, servings: Int): String =
+            "$BASE_ROUTE/${ingredientNames.joinToString(",").encode()}/$servings"
     }
 
     // R5/R18: exactamente uno de los dos argumentos está presente en cada navegación — recipeId

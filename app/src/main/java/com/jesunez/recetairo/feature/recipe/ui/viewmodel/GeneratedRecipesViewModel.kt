@@ -29,6 +29,11 @@ class GeneratedRecipesViewModel @Inject constructor(
         ?.filter { it.isNotBlank() }
         .orEmpty()
 
+    // R4/R7: Raciones_Objetivo elegido en Selector_Ingredientes; se lee una sola vez (val, no
+    // reactivo) y se reutiliza igual en el reintento tras un fallo (onRetryClicked), sin volver a
+    // Selector_Ingredientes a elegirlo de nuevo.
+    private val servings: Int = savedStateHandle.get<String>("servings")?.toIntOrNull() ?: 1
+
     private val _uiState = MutableStateFlow(GeneratedRecipesUiState())
     val uiState: StateFlow<GeneratedRecipesUiState> = _uiState.asStateFlow()
 
@@ -39,9 +44,7 @@ class GeneratedRecipesViewModel @Inject constructor(
     private fun generateRecipes() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
-            // T1 de seleccion-raciones-recetas: raciones fija a 1 hasta que T5/T6 lean el valor
-            // real elegido en Selector_Ingredientes desde la ruta de navegación.
-            when (val result = generateRecipesUseCase(ingredientNames, 1)) {
+            when (val result = generateRecipesUseCase(ingredientNames, servings)) {
                 is Result.Success -> {
                     // R16/R18: kept in memory only until the user explicitly saves. Published here,
                     // right after a successful generation rather than at save time, so a tap on any
