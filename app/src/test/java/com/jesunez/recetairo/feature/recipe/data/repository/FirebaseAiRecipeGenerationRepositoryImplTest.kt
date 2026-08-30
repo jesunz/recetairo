@@ -12,9 +12,11 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.verifyBlocking
 
 class FirebaseAiRecipeGenerationRepositoryImplTest {
 
@@ -28,6 +30,18 @@ class FirebaseAiRecipeGenerationRepositoryImplTest {
             onBlocking { generateContent(any<String>()) } doReturn mockResponse
         }
         return FirebaseAiRecipeGenerationRepositoryImpl(mockModel, buildAuthenticatedAuth(), moshi)
+    }
+
+    private fun buildRepositoryWithModel(
+        responseJson: String
+    ): Pair<FirebaseAiRecipeGenerationRepositoryImpl, GenerativeModel> {
+        val mockResponse = mock<GenerateContentResponse> {
+            on { text } doReturn responseJson
+        }
+        val mockModel = mock<GenerativeModel> {
+            onBlocking { generateContent(any<String>()) } doReturn mockResponse
+        }
+        return FirebaseAiRecipeGenerationRepositoryImpl(mockModel, buildAuthenticatedAuth(), moshi) to mockModel
     }
 
     private fun buildRepositoryThatThrows(exception: Throwable): FirebaseAiRecipeGenerationRepositoryImpl {
@@ -97,6 +111,58 @@ class FirebaseAiRecipeGenerationRepositoryImplTest {
 
             assertTrue("Result must be Error but was: $result", result is Result.Error)
             assertEquals("no network", (result as Result.Error).exception.message)
+        }
+    }
+
+    @Test
+    fun should_includeRequestedServingsInPrompt_when_generatingRecipes() {
+        // R5: the prompt sent to the AI model must state the requested servings count
+        val responseJson = """
+            [
+              {"title":"Tortilla de patatas","difficulty":"Fácil","durationMinutes":30,"servings":4,
+               "ingredients":[{"name":"Patatas","quantity":"4 unidades"}],
+               "steps":["Cocinar"]}
+            ]
+        """.trimIndent()
+        val (repository, mockModel) = buildRepositoryWithModel(responseJson)
+
+        runBlocking {
+            repository.generateRecipes(listOf("Patatas"), 3)
+
+            val promptCaptor = argumentCaptor<String>()
+            verifyBlocking(mockModel) { generateContent(promptCaptor.capture()) }
+
+            assertTrue(
+                "R5: el prompt debe indicar el número de raciones solicitado",
+                promptCaptor.firstValue.contains("Servings required for every recipe: 3")
+            )
+        }
+    }
+
+    @Test
+    fun should_overrideServingsWithRequestedValue_when_modelReturnsDifferentServings() {
+        // R6: the "servings" field of every mapped Recipe must equal what the user requested,
+        // even if the model's JSON response disagrees with the prompt instructions
+        val responseJson = """
+            [
+              {"title":"Tortilla de patatas","difficulty":"Fácil","durationMinutes":30,"servings":2,
+               "ingredients":[{"name":"Patatas","quantity":"4 unidades"}],
+               "steps":["Cocinar"]},
+              {"title":"Ensalada César","difficulty":"Media","durationMinutes":20,"servings":6,
+               "ingredients":[{"name":"Lechuga","quantity":"1 unidad"}],
+               "steps":["Lavar la lechuga"]},
+              {"title":"Paella","difficulty":"Difícil","durationMinutes":60,"servings":1,
+               "ingredients":[{"name":"Arroz","quantity":"500g"}],
+               "steps":["Cocinar"]}
+            ]
+        """.trimIndent()
+        val repository = buildRepository(responseJson)
+
+        runBlocking {
+            val result = repository.generateRecipes(listOf("Patatas"), 4)
+
+            val recipes = (result as Result.Success).data
+            assertTrue(recipes.all { it.servings == 4 })
         }
     }
 }
