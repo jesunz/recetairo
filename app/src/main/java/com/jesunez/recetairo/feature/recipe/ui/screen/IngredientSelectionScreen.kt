@@ -41,13 +41,14 @@ import com.jesunez.recetairo.feature.food.domain.model.Food
 import com.jesunez.recetairo.feature.food.domain.model.FoodCategory
 import com.jesunez.recetairo.feature.recipe.ui.IngredientSelectionUiState
 import com.jesunez.recetairo.feature.recipe.ui.component.IngredientCategorySection
+import com.jesunez.recetairo.feature.recipe.ui.component.ServingsSelector
 import com.jesunez.recetairo.feature.recipe.ui.viewmodel.IngredientSelectionViewModel
 import com.jesunez.recetairo.ui.theme.RecetairoTheme
 
 @Composable
 fun IngredientSelectionScreen(
     onNavigateBack: () -> Unit,
-    onGenerateRecipeClick: (List<String>) -> Unit,
+    onGenerateRecipeClick: (List<String>, Int) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: IngredientSelectionViewModel = hiltViewModel()
 ) {
@@ -57,7 +58,8 @@ fun IngredientSelectionScreen(
         onNavigateBack = onNavigateBack,
         onCategoryToggled = viewModel::onCategoryToggled,
         onIngredientToggled = viewModel::onIngredientToggled,
-        onGenerateRecipeClick = { onGenerateRecipeClick(state.selectedNames.toList()) },
+        onServingsSelected = viewModel::onServingsSelected,
+        onGenerateRecipeClick = { onGenerateRecipeClick(state.selectedNames.toList(), state.servings) },
         modifier = modifier
     )
 }
@@ -68,6 +70,7 @@ fun IngredientSelectionContent(
     onNavigateBack: () -> Unit,
     onCategoryToggled: (FoodCategory) -> Unit,
     onIngredientToggled: (String) -> Unit,
+    onServingsSelected: (Int) -> Unit,
     onGenerateRecipeClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -158,6 +161,14 @@ fun IngredientSelectionContent(
                 }
 
                 else -> Column(modifier = Modifier.fillMaxSize()) {
+                    // R1/R2: servings selector between the header and the ingredient sections,
+                    // visible whenever the pantry has content
+                    ServingsSelector(
+                        servings = state.servings,
+                        onServingsSelected = onServingsSelected,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+
                     // Selected ingredients stay visible even if their category is collapsed
                     if (state.selectedNames.isNotEmpty()) {
                         FlowRow(
@@ -228,6 +239,7 @@ private fun IngredientSelectionContentPreview() {
             onNavigateBack = {},
             onCategoryToggled = {},
             onIngredientToggled = {},
+            onServingsSelected = {},
             onGenerateRecipeClick = {}
         )
     }
@@ -242,6 +254,7 @@ private fun IngredientSelectionContentEmptyPreview() {
             onNavigateBack = {},
             onCategoryToggled = {},
             onIngredientToggled = {},
+            onServingsSelected = {},
             onGenerateRecipeClick = {}
         )
     }
@@ -256,6 +269,7 @@ private fun IngredientSelectionContentLoadingPreview() {
             onNavigateBack = {},
             onCategoryToggled = {},
             onIngredientToggled = {},
+            onServingsSelected = {},
             onGenerateRecipeClick = {}
         )
     }
