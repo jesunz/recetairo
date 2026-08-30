@@ -93,7 +93,7 @@ class ValidateFoodUseCaseTest {
     @Test
     fun should_returnQuantityError_when_quantityExceedsMaximum() {
         // Given
-        val food = validFood().copy(quantity = 100.0)
+        val food = validFood().copy(quantity = ValidateFoodUseCase.MAX_QUANTITY + 1)
         // When
         val result = useCase(food)
         // Then

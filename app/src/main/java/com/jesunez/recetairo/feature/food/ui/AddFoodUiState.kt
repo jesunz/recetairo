@@ -14,6 +14,8 @@ data class AddFoodUiState(
     val expiryDate: String = "",
     val imageUrl: String? = null,
     val nameSuggestions: List<String> = emptyList(),
+    // Non-blocking: duplicates are allowed (see ValidateFoodUseCase), this only warns the user
+    val isDuplicateName: Boolean = false,
     val validationErrors: Map<FoodField, String> = emptyMap(),
     val saveResult: SaveResult? = null,
     val isLoading: Boolean = false

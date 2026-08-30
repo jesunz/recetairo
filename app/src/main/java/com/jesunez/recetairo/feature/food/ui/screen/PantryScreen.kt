@@ -60,7 +60,6 @@ import com.jesunez.recetairo.feature.food.ui.viewmodel.PantryViewModel
 import com.jesunez.recetairo.ui.component.emoji
 import com.jesunez.recetairo.ui.theme.RecetairoTheme
 import java.time.LocalDate
-import java.time.temporal.ChronoUnit
 
 @Composable
 fun PantryScreen(
@@ -290,29 +289,15 @@ private fun PantryFoodRow(
     onLongPress: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // R11: distinguish already-expired foods from those expiring soon; foods without an
-    // expiryDate (e.g. non-perishables) show no expiry indicator and use a neutral tint.
-    val daysLeft = food.expiryDate?.let { ChronoUnit.DAYS.between(LocalDate.now(), it) }
-    val isExpired = daysLeft != null && daysLeft < 0
-    val expiryText = when {
-        daysLeft == null -> null
-        daysLeft < 0 -> "Caducado"
-        daysLeft == 0L -> "Vence hoy"
-        daysLeft == 1L -> "Vence mañana"
-        else -> "Vence en $daysLeft días"
-    }
+    val presentation = pantryFoodRowPresentation(food, isSelectionMode, isSelected)
     val accentColor = when {
-        isExpired -> MaterialTheme.colorScheme.error
-        daysLeft != null -> MaterialTheme.colorScheme.tertiary
+        presentation.isExpired -> MaterialTheme.colorScheme.error
+        presentation.hasExpiry -> MaterialTheme.colorScheme.tertiary
         else -> null
     }
-    val quantityText = "${food.quantity} ${food.unit}".trim()
-    val selectionText = when {
-        !isSelectionMode -> ""
-        isSelected -> ", seleccionado"
-        else -> ", no seleccionado"
-    }
-    val description = listOfNotNull(food.name, quantityText, expiryText).joinToString(", ") + selectionText
+    val quantityText = presentation.quantityText
+    val expiryText = presentation.expiryText
+    val description = presentation.description
 
     Card(
         modifier = modifier
@@ -395,8 +380,22 @@ private fun PantryContentPreview() {
             state = PantryUiState(
                 filter = PantryFilter.All,
                 foods = listOf(
-                    Food(id = 1, name = "Leche Entera", quantity = 1.0, unit = "L", category = "Lácteos", expiryDate = LocalDate.now()),
-                    Food(id = 2, name = "Aguacate", quantity = 2.0, unit = "u", category = "Frutas", expiryDate = LocalDate.now().minusDays(1)),
+                    Food(
+                        id = 1,
+                        name = "Leche Entera",
+                        quantity = 1.0,
+                        unit = "L",
+                        category = "Lácteos",
+                        expiryDate = LocalDate.now()
+                    ),
+                    Food(
+                        id = 2,
+                        name = "Aguacate",
+                        quantity = 2.0,
+                        unit = "u",
+                        category = "Frutas",
+                        expiryDate = LocalDate.now().minusDays(1)
+                    ),
                     Food(id = 3, name = "Arroz", quantity = 1.0, unit = "kg", category = "Cereales")
                 ),
                 isLoading = false
@@ -429,8 +428,22 @@ private fun PantryContentSelectionModePreview() {
             state = PantryUiState(
                 filter = PantryFilter.All,
                 foods = listOf(
-                    Food(id = 1, name = "Leche Entera", quantity = 1.0, unit = "L", category = "Lácteos", expiryDate = LocalDate.now()),
-                    Food(id = 2, name = "Aguacate", quantity = 2.0, unit = "u", category = "Frutas", expiryDate = LocalDate.now().minusDays(1)),
+                    Food(
+                        id = 1,
+                        name = "Leche Entera",
+                        quantity = 1.0,
+                        unit = "L",
+                        category = "Lácteos",
+                        expiryDate = LocalDate.now()
+                    ),
+                    Food(
+                        id = 2,
+                        name = "Aguacate",
+                        quantity = 2.0,
+                        unit = "u",
+                        category = "Frutas",
+                        expiryDate = LocalDate.now().minusDays(1)
+                    ),
                     Food(id = 3, name = "Arroz", quantity = 1.0, unit = "kg", category = "Cereales")
                 ),
                 isLoading = false,

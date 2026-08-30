@@ -5,7 +5,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Inventory
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.RestaurantMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -16,14 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-
-data class NavigationItem(
-    val label: String,
-    val icon: ImageVector,
-    val route: String
-)
 
 @Composable
 fun BottomNavigationBar(
@@ -34,8 +26,7 @@ fun BottomNavigationBar(
     val items = listOf(
         NavigationItem("Inicio", Icons.Default.Home, "home"),
         NavigationItem("Despensa", Icons.Default.Inventory, "pantry"),
-        NavigationItem("Recetas", Icons.Default.RestaurantMenu, "recipes"),
-        NavigationItem("Perfil", Icons.Default.Person, "profile")
+        NavigationItem("Recetas", Icons.Default.RestaurantMenu, "recipes")
     )
 
     NavigationBar(

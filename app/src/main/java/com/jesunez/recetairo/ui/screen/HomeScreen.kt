@@ -33,6 +33,7 @@ fun HomeScreen(
     onCategoryClick: (FoodCategory) -> Unit,
     onViewAllExpiringClick: () -> Unit,
     onNavigateToPantry: () -> Unit,
+    onNavigateToRecipes: () -> Unit,
     onFoodClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel()
@@ -46,6 +47,7 @@ fun HomeScreen(
         onCategoryClick = onCategoryClick,
         onViewAllExpiringClick = onViewAllExpiringClick,
         onNavigateToPantry = onNavigateToPantry,
+        onNavigateToRecipes = onNavigateToRecipes,
         onFoodClick = onFoodClick,
         modifier = modifier
     )
@@ -60,6 +62,7 @@ fun HomeContent(
     onCategoryClick: (FoodCategory) -> Unit,
     onViewAllExpiringClick: () -> Unit,
     onNavigateToPantry: () -> Unit,
+    onNavigateToRecipes: () -> Unit,
     onFoodClick: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -67,15 +70,19 @@ fun HomeContent(
         modifier = modifier.fillMaxSize(),
         topBar = {
             HomeHeader(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                onNotificationClick = { /* TODO: Implement notifications */ },
-                onProfileClick = { /* TODO: Implement profile */ }
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
         },
         bottomBar = {
             BottomNavigationBar(
                 currentRoute = "home",
-                onItemClick = { route -> if (route == "pantry") onNavigateToPantry() }
+                onItemClick = { route ->
+                    // R30: the "Recetas" tab, previously without effect, now navigates to Menu_Recetas
+                    when (route) {
+                        "pantry" -> onNavigateToPantry()
+                        "recipes" -> onNavigateToRecipes()
+                    }
+                }
             )
         }
     ) { paddingValues ->
@@ -130,6 +137,7 @@ fun HomeScreenPreview() {
             onCategoryClick = {},
             onViewAllExpiringClick = {},
             onNavigateToPantry = {},
+            onNavigateToRecipes = {},
             onFoodClick = {}
         )
     }

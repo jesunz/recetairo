@@ -14,6 +14,10 @@ import com.jesunez.recetairo.feature.food.ui.screen.BarcodeScanScreen
 import com.jesunez.recetairo.feature.food.ui.screen.FoodDetailScreen
 import com.jesunez.recetairo.feature.food.ui.screen.PantryScreen
 import com.jesunez.recetairo.feature.food.ui.screen.ReceiptScanScreen
+import com.jesunez.recetairo.feature.recipe.ui.screen.GeneratedRecipesScreen
+import com.jesunez.recetairo.feature.recipe.ui.screen.IngredientSelectionScreen
+import com.jesunez.recetairo.feature.recipe.ui.screen.RecipeDetailScreen
+import com.jesunez.recetairo.feature.recipe.ui.screen.RecipeListScreen
 import com.jesunez.recetairo.ui.screen.HomeScreen
 
 @Composable
@@ -33,9 +37,66 @@ fun RecetairoNavGraph(navController: NavHostController = rememberNavController()
                 onNavigateToPantry = {
                     navController.navigate(Screen.Pantry.buildRoute(PantryFilter.All))
                 },
+                onNavigateToRecipes = {
+                    navController.navigate(Screen.RecipeList.route)
+                },
                 onFoodClick = { foodId ->
                     navController.navigate(Screen.FoodDetail.buildRoute(foodId))
                 }
+            )
+        }
+
+        composable(Screen.RecipeList.route) {
+            RecipeListScreen(
+                onGenerateClick = {
+                    navController.navigate(Screen.IngredientSelection.route)
+                },
+                onRecipeClick = { recipeId ->
+                    navController.navigate(Screen.RecipeDetail.buildRoute(recipeId))
+                }
+            )
+        }
+
+        composable(Screen.IngredientSelection.route) {
+            IngredientSelectionScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onGenerateRecipeClick = { ingredientNames ->
+                    navController.navigate(Screen.GeneratedRecipes.buildRoute(ingredientNames))
+                }
+            )
+        }
+
+        composable(
+            route = Screen.GeneratedRecipes.route,
+            arguments = listOf(navArgument("ingredientNames") { type = NavType.StringType })
+        ) {
+            GeneratedRecipesScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onRecipeClick = { generatedIndex ->
+                    // R18: navega a Detalle_Receta con generatedIndex — la Receta aún no está
+                    // guardada, RecipeDetailViewModel la resuelve vía GeneratedRecipesCache
+                    navController.navigate(Screen.RecipeDetail.buildRoute(generatedIndex))
+                },
+                onSavedSuccessfully = {
+                    // R20: tras guardar, vuelta a Menu_Recetas — descarta Selector_Ingredientes y
+                    // Recetas_Generadas de la pila
+                    navController.popBackStack(Screen.RecipeList.route, false)
+                }
+            )
+        }
+
+        composable(
+            route = Screen.RecipeDetail.route,
+            arguments = listOf(
+                // NavType.LongType/IntType no admite nullable = true en Navigation Compose;
+                // mismo patrón StringType nullable que Screen.Pantry, parseado a mano en el
+                // ViewModel (mismo criterio que PantryViewModel.toPantryFilter())
+                navArgument("recipeId") { type = NavType.StringType; nullable = true },
+                navArgument("generatedIndex") { type = NavType.StringType; nullable = true }
+            )
+        ) {
+            RecipeDetailScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 

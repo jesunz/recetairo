@@ -4,4 +4,10 @@
     <style name="Theme.Recetairo" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">#FF101410</item>
     </style>
+
+    <style name="Theme.Recetairo.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/brand_primary</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.Recetairo</item>
+    </style>
 </resources>

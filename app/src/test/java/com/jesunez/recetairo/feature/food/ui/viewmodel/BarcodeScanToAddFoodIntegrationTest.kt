@@ -44,7 +44,13 @@ class BarcodeScanToAddFoodIntegrationTest {
 
     private val fakeProductRepository = object : ProductRepository {
         override suspend fun getProductByBarcode(barcode: String): Result<ProductInfo> = Result.Success(
-            ProductInfo(barcode = barcode, name = "Leche entera", brand = "Marca X", category = "Lácteos", imageUrl = "http://img/leche.png")
+            ProductInfo(
+                barcode = barcode,
+                name = "Leche entera",
+                brand = "Marca X",
+                category = "Lácteos",
+                imageUrl = "http://img/leche.png"
+            )
         )
     }
 

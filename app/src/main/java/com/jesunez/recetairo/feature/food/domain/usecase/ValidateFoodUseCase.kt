@@ -37,6 +37,6 @@ class ValidateFoodUseCase @Inject constructor() {
     companion object {
         const val MAX_NAME_LENGTH = 100
         const val MIN_QUANTITY = 0.001
-        const val MAX_QUANTITY = 99.999
+        const val MAX_QUANTITY = 999.0
     }
 }

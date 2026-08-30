@@ -1,0 +1,54 @@
+build:
+  maxIssues: 0
+
+complexity:
+  # Composable UI functions idiomatically take state + several callbacks + modifier,
+  # and span many lines for a multi-section layout; that's not the same kind of
+  # complexity these rules were designed to flag.
+  LongParameterList:
+    functionThreshold: 7
+    constructorThreshold: 8
+    ignoreAnnotated: ["Composable"]
+  LongMethod:
+    ignoreAnnotated: ["Composable"]
+  TooManyFunctions:
+    thresholdInClasses: 15
+
+style:
+  MagicNumber:
+    active: false
+  MaxLineLength:
+    maxLineLength: 140
+  # @Preview composables are entry points for tooling, not dead code.
+  UnusedPrivateMember:
+    ignoreAnnotated: ["Preview"]
+  # Guard-clause early returns (e.g. validation/filter helpers with 3 sequential
+  # checks) are idiomatic Kotlin and more readable than forcing a single return.
+  ReturnCount:
+    max: 3
+
+exceptions:
+  # The data layer's designated error boundary: every repository/use case catch
+  # converts arbitrary failures (Room, Retrofit, Firebase, ...) into Result.Error,
+  # per docs/architecture.md. Narrowing this to specific exception types would
+  # undermine that contract, not improve it. The same catch-log-and-continue
+  # pattern shows up at two more boundaries that must never crash their caller:
+  # CameraX lifecycle binding in the scan screens, and Firebase init at app start.
+  TooGenericExceptionCaught:
+    excludes:
+      - "**/data/repository/**"
+      - "**/domain/usecase/**"
+      - "**/ui/screen/BarcodeScanScreen.kt"
+      - "**/ui/screen/ReceiptScanScreen.kt"
+      - "**/RecetairoApplication.kt"
+
+naming:
+  # Composables are conventionally PascalCase, unlike regular functions.
+  FunctionNaming:
+    ignoreAnnotated: ["Composable"]
+
+comments:
+  UndocumentedPublicClass:
+    active: false
+  UndocumentedPublicFunction:
+    active: false
