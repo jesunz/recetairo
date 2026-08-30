@@ -23,7 +23,9 @@ class FirebaseAiRecipeGenerationRepositoryImpl @Inject constructor(
     private val moshi: Moshi
 ) : RecipeGenerationRepository {
 
-    override suspend fun generateRecipes(ingredientNames: List<String>): Result<List<Recipe>> = try {
+    // T1 de seleccion-raciones-recetas: firma alineada con la interfaz; el prompt y la
+    // sobreescritura de "servings" con este valor llegan en T2.
+    override suspend fun generateRecipes(ingredientNames: List<String>, servings: Int): Result<List<Recipe>> = try {
         withTimeout(TIMEOUT_MS.milliseconds) {
             ensureAuthenticated()
             val prompt = PROMPT_TEMPLATE.replace(

@@ -60,7 +60,7 @@ class FirebaseAiRecipeGenerationRepositoryImplTest {
         val repository = buildRepository(responseJson)
 
         runBlocking {
-            val result = repository.generateRecipes(listOf("Patatas", "Huevos"))
+            val result = repository.generateRecipes(listOf("Patatas", "Huevos"), 4)
 
             assertTrue("Result must be Success but was: $result", result is Result.Success)
             val recipes = (result as Result.Success).data
@@ -81,7 +81,7 @@ class FirebaseAiRecipeGenerationRepositoryImplTest {
         val repository = buildRepository("[{")
 
         runBlocking {
-            val result = repository.generateRecipes(listOf("Patatas"))
+            val result = repository.generateRecipes(listOf("Patatas"), 1)
 
             assertTrue("Result must be Error but was: $result", result is Result.Error)
         }
@@ -93,7 +93,7 @@ class FirebaseAiRecipeGenerationRepositoryImplTest {
         val repository = buildRepositoryThatThrows(RuntimeException("no network"))
 
         runBlocking {
-            val result = repository.generateRecipes(listOf("Patatas"))
+            val result = repository.generateRecipes(listOf("Patatas"), 1)
 
             assertTrue("Result must be Error but was: $result", result is Result.Error)
             assertEquals("no network", (result as Result.Error).exception.message)

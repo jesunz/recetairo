@@ -36,7 +36,7 @@ class GeneratedRecipesViewModelTest {
         var result: Result<List<Recipe>>
     ) : RecipeGenerationRepository {
         var callCount = 0
-        override suspend fun generateRecipes(ingredientNames: List<String>): Result<List<Recipe>> {
+        override suspend fun generateRecipes(ingredientNames: List<String>, servings: Int): Result<List<Recipe>> {
             callCount++
             return result
         }

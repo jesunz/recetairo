@@ -13,7 +13,7 @@ class GenerateRecipesUseCaseTest {
 
     private fun buildUseCase(result: Result<List<Recipe>>): GenerateRecipesUseCase {
         val fakeRepository = object : RecipeGenerationRepository {
-            override suspend fun generateRecipes(ingredientNames: List<String>): Result<List<Recipe>> =
+            override suspend fun generateRecipes(ingredientNames: List<String>, servings: Int): Result<List<Recipe>> =
                 result
         }
         return GenerateRecipesUseCase(fakeRepository)
@@ -35,7 +35,7 @@ class GenerateRecipesUseCaseTest {
         val useCase = buildUseCase(Result.Success(recipes))
 
         // When
-        val result = useCase(listOf("Patata"))
+        val result = useCase(listOf("Patata"), 4)
 
         // Then
         assertTrue(result is Result.Success)
@@ -49,7 +49,7 @@ class GenerateRecipesUseCaseTest {
         val useCase = buildUseCase(Result.Error(exception))
 
         // When
-        val result = useCase(listOf("Patata"))
+        val result = useCase(listOf("Patata"), 1)
 
         // Then
         assertTrue(result is Result.Error)

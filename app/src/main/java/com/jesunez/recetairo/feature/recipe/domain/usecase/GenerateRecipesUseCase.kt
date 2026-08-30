@@ -8,6 +8,6 @@ import javax.inject.Inject
 class GenerateRecipesUseCase @Inject constructor(
     private val recipeGenerationRepository: RecipeGenerationRepository
 ) {
-    suspend operator fun invoke(ingredientNames: List<String>): Result<List<Recipe>> =
-        recipeGenerationRepository.generateRecipes(ingredientNames)
+    suspend operator fun invoke(ingredientNames: List<String>, servings: Int): Result<List<Recipe>> =
+        recipeGenerationRepository.generateRecipes(ingredientNames, servings)
 }
