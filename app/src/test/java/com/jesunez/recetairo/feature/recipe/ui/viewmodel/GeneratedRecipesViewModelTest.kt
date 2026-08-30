@@ -36,8 +36,10 @@ class GeneratedRecipesViewModelTest {
         var result: Result<List<Recipe>>
     ) : RecipeGenerationRepository {
         var callCount = 0
+        var lastServings: Int? = null
         override suspend fun generateRecipes(ingredientNames: List<String>, servings: Int): Result<List<Recipe>> {
             callCount++
+            lastServings = servings
             return result
         }
     }
@@ -92,9 +94,15 @@ class GeneratedRecipesViewModelTest {
         generationRepository: FakeRecipeGenerationRepository =
             FakeRecipeGenerationRepository(Result.Success(generatedRecipes)),
         recipeRepository: FakeRecipeRepository = FakeRecipeRepository(),
-        cache: GeneratedRecipesCache = GeneratedRecipesCache()
+        cache: GeneratedRecipesCache = GeneratedRecipesCache(),
+        servings: String? = null
     ): GeneratedRecipesViewModel = GeneratedRecipesViewModel(
-        savedStateHandle = SavedStateHandle(mapOf("ingredientNames" to "Tomate,Cebolla")),
+        savedStateHandle = SavedStateHandle(
+            buildMap {
+                put("ingredientNames", "Tomate,Cebolla")
+                servings?.let { put("servings", it) }
+            }
+        ),
         generateRecipesUseCase = GenerateRecipesUseCase(generationRepository),
         saveRecipesUseCase = SaveRecipesUseCase(recipeRepository),
         generatedRecipesCache = cache
@@ -194,5 +202,48 @@ class GeneratedRecipesViewModelTest {
         assertFalse(state.savedSuccessfully)
         assertFalse(state.isSaving)
         assertEquals(errorMessage, state.error)
+    }
+
+    @Test
+    fun should_passServingsFromRoute_when_generatingRecipes() = runTest(testDispatcher) {
+        // Given / When: R4, servings viaja como argumento de la ruta
+        val generationRepository = FakeRecipeGenerationRepository(Result.Success(generatedRecipes))
+        buildViewModel(generationRepository = generationRepository, servings = "3")
+        runCurrent()
+
+        // Then
+        assertEquals(3, generationRepository.lastServings)
+    }
+
+    @Test
+    fun should_defaultServingsToOne_when_routeHasNoServingsArgument() = runTest(testDispatcher) {
+        // Given / When: ruta sin "servings" (no debería ocurrir en producción, pero el ViewModel
+        // no debe romperse ante su ausencia)
+        val generationRepository = FakeRecipeGenerationRepository(Result.Success(generatedRecipes))
+        buildViewModel(generationRepository = generationRepository)
+        runCurrent()
+
+        // Then
+        assertEquals(1, generationRepository.lastServings)
+    }
+
+    @Test
+    fun should_reuseSameServings_when_retryingAfterFailure() = runTest(testDispatcher) {
+        // Given: la generación falla al abrir la pantalla, con servings = 2 elegido en
+        // Selector_Ingredientes
+        val generationRepository = FakeRecipeGenerationRepository(
+            Result.Error(RuntimeException("no network"), "error")
+        )
+        val viewModel = buildViewModel(generationRepository = generationRepository, servings = "2")
+        runCurrent()
+
+        // When: el humano reintenta tras el fallo
+        generationRepository.result = Result.Success(generatedRecipes)
+        viewModel.onRetryClicked()
+        runCurrent()
+
+        // Then: R7, el reintento reutiliza el mismo servings, sin volver a Selector_Ingredientes
+        assertEquals(2, generationRepository.callCount)
+        assertEquals(2, generationRepository.lastServings)
     }
 }

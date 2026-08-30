@@ -164,4 +164,57 @@ class IngredientSelectionViewModelTest {
         // Then
         assertFalse(viewModel.uiState.value.isGenerateEnabled)
     }
+
+    @Test
+    fun should_defaultToOneServing_when_screenOpens() = runTest(testDispatcher) {
+        // Given / When
+        val viewModel = buildViewModel()
+        runCurrent()
+
+        // Then: R1
+        assertEquals(1, viewModel.uiState.value.servings)
+    }
+
+    @Test
+    fun should_updateServingsWithoutTouchingSelection_when_servingsSelected() = runTest(testDispatcher) {
+        // Given: 2 ingredientes ya seleccionados
+        val viewModel = buildViewModel()
+        runCurrent()
+        viewModel.onIngredientToggled("Tomate")
+        viewModel.onIngredientToggled("Cebolla")
+
+        // When
+        viewModel.onServingsSelected(4)
+
+        // Then: R3, la selección de alimentos no cambia
+        val state = viewModel.uiState.value
+        assertEquals(4, state.servings)
+        assertEquals(setOf("Tomate", "Cebolla"), state.selectedNames)
+    }
+
+    @Test
+    fun should_clampServingsToMax_when_valueAboveFour() = runTest(testDispatcher) {
+        // Given
+        val viewModel = buildViewModel()
+        runCurrent()
+
+        // When
+        viewModel.onServingsSelected(7)
+
+        // Then
+        assertEquals(4, viewModel.uiState.value.servings)
+    }
+
+    @Test
+    fun should_clampServingsToMin_when_valueBelowOne() = runTest(testDispatcher) {
+        // Given
+        val viewModel = buildViewModel()
+        runCurrent()
+
+        // When
+        viewModel.onServingsSelected(0)
+
+        // Then
+        assertEquals(1, viewModel.uiState.value.servings)
+    }
 }
