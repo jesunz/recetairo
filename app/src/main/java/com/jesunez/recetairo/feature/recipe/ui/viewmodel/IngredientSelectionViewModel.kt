@@ -83,7 +83,15 @@ class IngredientSelectionViewModel @Inject constructor(
         }
     }
 
+    // R3: changing servings never touches selectedNames, both are independent fields of the
+    // same state. coerceIn is a cheap defensive clamp; the UI (T4) only ever sends 1..4.
+    fun onServingsSelected(servings: Int) {
+        _uiState.update { state -> state.copy(servings = servings.coerceIn(MIN_SERVINGS, MAX_SERVINGS)) }
+    }
+
     private companion object {
         const val MAX_SELECTED_INGREDIENTS = 3
+        const val MIN_SERVINGS = 1
+        const val MAX_SERVINGS = 4
     }
 }
