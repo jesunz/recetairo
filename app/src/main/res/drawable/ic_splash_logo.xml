@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-    <!-- Same "restaurant" (fork & knife) glyph used in HomeHeader's circular logo,
-         scaled from its native 24x24 viewport and centered in the 108x108 adaptive
-         icon canvas, within the ~66dp safe zone. -->
+    android:width="240dp"
+    android:height="240dp"
+    android:viewportWidth="240"
+    android:viewportHeight="240">
+    <!-- Same "restaurant" (fork & knife) glyph as the app icon and HomeHeader logo,
+         scaled from its native 24x24 viewport and centered within the splash
+         screen's recommended ~160dp safe zone. -->
     <group
-        android:scaleX="2.5"
-        android:scaleY="2.5"
-        android:translateX="24"
-        android:translateY="24"
+        android:scaleX="6"
+        android:scaleY="6"
+        android:translateX="48"
+        android:translateY="48"
         android:pivotX="0"
         android:pivotY="0">
         <path

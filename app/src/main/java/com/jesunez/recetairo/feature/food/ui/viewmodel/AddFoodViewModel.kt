@@ -61,7 +61,12 @@ class AddFoodViewModel @Inject constructor(
                     // matching itself, reopening the dropdown while the screen navigates away.
                     // Once save has succeeded there is nothing left to suggest against, so ignore it.
                     if (_uiState.value.saveResult != SaveResult.Success) {
-                        _uiState.update { it.copy(nameSuggestions = suggestions) }
+                        val isDuplicate = suggestions.any {
+                            it.equals(_uiState.value.name.trim(), ignoreCase = true)
+                        }
+                        _uiState.update {
+                            it.copy(nameSuggestions = suggestions, isDuplicateName = isDuplicate)
+                        }
                     }
                 }
         }
@@ -89,7 +94,10 @@ class AddFoodViewModel @Inject constructor(
     }
 
     fun onSuggestionSelected(suggestion: String) {
-        _uiState.update { it.copy(name = suggestion, nameSuggestions = emptyList()) }
+        // Selecting a suggestion means the picked name already exists in the despensa
+        _uiState.update {
+            it.copy(name = suggestion, nameSuggestions = emptyList(), isDuplicateName = true)
+        }
     }
 
     fun onProductInfoReceived(productInfo: ProductInfo) {

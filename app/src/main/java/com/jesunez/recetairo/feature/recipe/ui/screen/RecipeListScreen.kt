@@ -3,10 +3,8 @@ package com.jesunez.recetairo.feature.recipe.ui.screen
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -163,7 +161,7 @@ fun RecipeListContent(
                         )
                     }
 
-                    else -> RecipeGrid(recipes = state.recipes, onRecipeClick = onRecipeClick)
+                    else -> RecipeList(recipes = state.recipes, onRecipeClick = onRecipeClick)
                 }
             }
 
@@ -215,7 +213,7 @@ private fun GenerateWithAiCard(onClick: () -> Unit, modifier: Modifier = Modifie
 }
 
 @Composable
-private fun RecipeGrid(
+private fun RecipeList(
     recipes: List<Recipe>,
     onRecipeClick: (Long) -> Unit,
     modifier: Modifier = Modifier
@@ -224,26 +222,12 @@ private fun RecipeGrid(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        recipes.chunked(2).forEach { rowItems ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(IntrinsicSize.Min),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                rowItems.forEach { recipe ->
-                    RecipeCard(
-                        recipe = recipe,
-                        onClick = { onRecipeClick(recipe.id) },
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                    )
-                }
-                if (rowItems.size == 1) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-            }
+        recipes.forEach { recipe ->
+            RecipeCard(
+                recipe = recipe,
+                onClick = { onRecipeClick(recipe.id) },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }

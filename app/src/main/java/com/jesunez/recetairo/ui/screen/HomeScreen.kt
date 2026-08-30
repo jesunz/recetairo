@@ -70,9 +70,7 @@ fun HomeContent(
         modifier = modifier.fillMaxSize(),
         topBar = {
             HomeHeader(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                onNotificationClick = { /* TODO: Implement notifications */ },
-                onProfileClick = { /* TODO: Implement profile */ }
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
         },
         bottomBar = {

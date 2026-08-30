@@ -1,5 +1,6 @@
 package com.jesunez.recetairo.feature.recipe.ui.screen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
@@ -37,6 +41,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.jesunez.recetairo.core.ui.component.ConfirmationDialog
 import com.jesunez.recetairo.core.ui.component.RecipeCard
 import com.jesunez.recetairo.feature.recipe.domain.model.Recipe
 import com.jesunez.recetairo.feature.recipe.domain.model.RecipeDifficulty
@@ -62,9 +67,35 @@ fun GeneratedRecipesScreen(
         if (state.savedSuccessfully) onSavedSuccessfully()
     }
 
+    // Warn before discarding the generated-but-not-yet-saved recipes on back navigation
+    var showBackConfirmation by remember { mutableStateOf(false) }
+    val requestNavigateBack = {
+        if (state.recipes.isNotEmpty() && !state.savedSuccessfully) {
+            showBackConfirmation = true
+        } else {
+            onNavigateBack()
+        }
+    }
+    BackHandler(enabled = state.recipes.isNotEmpty() && !state.savedSuccessfully) {
+        showBackConfirmation = true
+    }
+    if (showBackConfirmation) {
+        ConfirmationDialog(
+            title = "¿Salir sin guardar?",
+            message = "Se perderán las recetas generadas si sales sin guardarlas.",
+            confirmText = "Salir",
+            cancelText = "Cancelar",
+            onConfirm = {
+                showBackConfirmation = false
+                onNavigateBack()
+            },
+            onCancel = { showBackConfirmation = false }
+        )
+    }
+
     GeneratedRecipesContent(
         state = state,
-        onNavigateBack = onNavigateBack,
+        onNavigateBack = requestNavigateBack,
         onRecipeClick = onRecipeClick,
         onRecipeCheckedChanged = viewModel::onRecipeCheckedChanged,
         onRetryClicked = viewModel::onRetryClicked,

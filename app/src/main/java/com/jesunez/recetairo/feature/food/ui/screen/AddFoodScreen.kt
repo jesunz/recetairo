@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.PopupProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.jesunez.recetairo.core.ui.component.CategoryDropdown
 import com.jesunez.recetairo.core.ui.component.DateField
@@ -123,14 +124,16 @@ fun AddFoodContent(
         var showSuggestions by remember(state.nameSuggestions) {
             mutableStateOf(state.nameSuggestions.isNotEmpty())
         }
+        val nameSupportingMessage = state.validationErrors[FoodField.NAME]
+            ?: if (state.isDuplicateName) "Ya tienes un alimento con este nombre en la despensa" else null
         Box(modifier = Modifier.fillMaxWidth()) {
             OutlinedTextField(
                 value = state.name,
                 onValueChange = onNameChanged,
                 label = { Text("Nombre *") },
                 isError = FoodField.NAME in state.validationErrors,
-                supportingText = if (FoodField.NAME in state.validationErrors) {
-                    { Text(state.validationErrors.getValue(FoodField.NAME)) }
+                supportingText = if (nameSupportingMessage != null) {
+                    { Text(nameSupportingMessage) }
                 } else null,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -143,6 +146,10 @@ fun AddFoodContent(
                 // own exit animation has time to finish before onNavigateBack() pops the screen
                 expanded = showSuggestions && !state.isLoading,
                 onDismissRequest = { showSuggestions = false },
+                // Not focusable: a focusable popup steals focus from the OutlinedTextField the
+                // instant a suggestion appears, which blocks the keyboard from delivering any
+                // further keystrokes to it while the dropdown is open.
+                properties = PopupProperties(focusable = false),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 state.nameSuggestions.forEach { suggestion ->

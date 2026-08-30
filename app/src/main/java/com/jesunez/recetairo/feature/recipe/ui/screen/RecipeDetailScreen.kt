@@ -1,7 +1,6 @@
 package com.jesunez.recetairo.feature.recipe.ui.screen
 
 import android.content.Intent
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -24,7 +22,6 @@ import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -36,9 +33,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -46,8 +45,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.jesunez.recetairo.core.ui.component.ConfirmationDialog
 import com.jesunez.recetairo.feature.recipe.domain.model.Recipe
 import com.jesunez.recetairo.feature.recipe.domain.model.RecipeDifficulty
 import com.jesunez.recetairo.feature.recipe.domain.model.RecipeIngredient
@@ -66,10 +65,33 @@ fun RecipeDetailScreen(
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
+    // R24: unmarking a saved Receta removes it from Recetas_Guardadas; warn before doing so
+    // instead of removing it on the first tap.
+    var showUnfavoriteConfirmation by remember { mutableStateOf(false) }
+    if (showUnfavoriteConfirmation) {
+        ConfirmationDialog(
+            title = "¿Quitar de recetas guardadas?",
+            message = "Se eliminará esta receta de tus recetas guardadas.",
+            confirmText = "Quitar",
+            cancelText = "Cancelar",
+            onConfirm = {
+                showUnfavoriteConfirmation = false
+                viewModel.onFavoriteClicked()
+            },
+            onCancel = { showUnfavoriteConfirmation = false }
+        )
+    }
+
     RecipeDetailContent(
         state = state,
         onNavigateBack = onNavigateBack,
-        onFavoriteClicked = viewModel::onFavoriteClicked,
+        onFavoriteClicked = {
+            if (state.isSaved) {
+                showUnfavoriteConfirmation = true
+            } else {
+                viewModel.onFavoriteClicked()
+            }
+        },
         // R25: opens Android's share sheet with a text summary of the Receta (title, ingredients,
         // steps) — shareText is already fully formatted by RecipeDetailUiState.
         onShareClicked = {
@@ -205,36 +227,6 @@ private fun RecipeDetailBody(
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(
-            modifier = Modifier
-                .size(96.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(text = "🍽️", fontSize = 48.sp)
-        }
-
-        Spacer(modifier = Modifier.padding(8.dp))
-
-        // R26: rendered for visual fidelity only, no navigation or business logic attached
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Default.Star,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.tertiary,
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = "Receta Destacada",
-                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = MaterialTheme.colorScheme.tertiary
-            )
-        }
-
-        Spacer(modifier = Modifier.padding(8.dp))
-
         // R21: title, duration, difficulty, servings
         Text(
             text = recipe.title,
@@ -351,17 +343,6 @@ private fun RecipeDetailBody(
             }
         }
 
-        Spacer(modifier = Modifier.padding(12.dp))
-
-        // R26: visual only, no "modo cocina" exists yet in this feature
-        Button(
-            onClick = {},
-            modifier = Modifier
-                .fillMaxWidth()
-                .semantics { contentDescription = "Empezar a Cocinar" }
-        ) {
-            Text("Empezar a Cocinar")
-        }
     }
 }
 

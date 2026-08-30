@@ -3,6 +3,7 @@ package com.jesunez.recetairo.feature.recipe.ui.screen
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +18,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -154,20 +157,48 @@ fun IngredientSelectionContent(
                     )
                 }
 
-                else -> LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    items(state.categorized.entries.toList(), key = { it.key.name }) { (category, foods) ->
-                        IngredientCategorySection(
-                            category = category,
-                            foods = foods,
-                            isExpanded = category == state.expandedCategory,
-                            selectedNames = state.selectedNames,
-                            onCategoryToggled = { onCategoryToggled(category) },
-                            onIngredientToggled = onIngredientToggled
-                        )
+                else -> Column(modifier = Modifier.fillMaxSize()) {
+                    // Selected ingredients stay visible even if their category is collapsed
+                    if (state.selectedNames.isNotEmpty()) {
+                        FlowRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            state.selectedNames.forEach { name ->
+                                FilterChip(
+                                    selected = true,
+                                    onClick = { onIngredientToggled(name) },
+                                    label = { Text(name) },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                                    ),
+                                    modifier = Modifier.semantics {
+                                        contentDescription = "$name, seleccionado"
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        items(state.categorized.entries.toList(), key = { it.key.name }) { (category, foods) ->
+                            IngredientCategorySection(
+                                category = category,
+                                foods = foods,
+                                isExpanded = category == state.expandedCategory,
+                                selectedNames = state.selectedNames,
+                                onCategoryToggled = { onCategoryToggled(category) },
+                                onIngredientToggled = onIngredientToggled
+                            )
+                        }
                     }
                 }
             }
