@@ -23,15 +23,12 @@ class FirebaseAiRecipeGenerationRepositoryImpl @Inject constructor(
     private val moshi: Moshi
 ) : RecipeGenerationRepository {
 
-    // T1 de seleccion-raciones-recetas: firma alineada con la interfaz; el prompt y la
-    // sobreescritura de "servings" con este valor llegan en T2.
     override suspend fun generateRecipes(ingredientNames: List<String>, servings: Int): Result<List<Recipe>> = try {
         withTimeout(TIMEOUT_MS.milliseconds) {
             ensureAuthenticated()
-            val prompt = PROMPT_TEMPLATE.replace(
-                INGREDIENTS_PLACEHOLDER,
-                ingredientNames.joinToString(", ")
-            )
+            val prompt = PROMPT_TEMPLATE
+                .replace(INGREDIENTS_PLACEHOLDER, ingredientNames.joinToString(", "))
+                .replace(SERVINGS_PLACEHOLDER, servings.toString())
             val response = generativeModel.generateContent(prompt)
             val json = response.text
                 ?: return@withTimeout Result.Error(IllegalStateException("Empty AI response"))
@@ -41,7 +38,9 @@ class FirebaseAiRecipeGenerationRepositoryImpl @Inject constructor(
             )
             val dtos = adapter.fromJson(json).orEmpty()
 
-            Result.Success(dtos.toDomain())
+            // R6: el "servings" de cada Receta se fija al valor solicitado por el Usuario, sin
+            // depender de que el modelo lo reproduzca correctamente en el JSON devuelto.
+            Result.Success(dtos.toDomain().map { it.copy(servings = servings) })
         }
     } catch (e: TimeoutCancellationException) {
         Result.Error(e, "Recipe generation timeout: exceeded 30 seconds")
@@ -59,6 +58,7 @@ class FirebaseAiRecipeGenerationRepositoryImpl @Inject constructor(
     private companion object {
         const val TIMEOUT_MS = 30_000L
         const val INGREDIENTS_PLACEHOLDER = "{{INGREDIENTS}}"
+        const val SERVINGS_PLACEHOLDER = "{{SERVINGS}}"
 
         val PROMPT_TEMPLATE = """
             You are a recipe generator for a Spanish-speaking home cooking app.
@@ -75,17 +75,25 @@ class FirebaseAiRecipeGenerationRepositoryImpl @Inject constructor(
               recipe, but they must be reasonable accompaniments for the
               prioritized ingredients above (e.g. basic spices, oil, salt, rice,
               pasta, common vegetables).
+            - Every recipe MUST serve exactly $SERVINGS_PLACEHOLDER people. This
+              is a fixed requirement chosen by the user, not a suggestion: do
+              not default to a different serving size.
+            - Calculate the quantity of every ingredient in "ingredients" so
+              that it matches exactly $SERVINGS_PLACEHOLDER servings (e.g. if a
+              dish normally uses "2 unidades" of an ingredient per serving and
+              $SERVINGS_PLACEHOLDER servings are requested, scale it up or down
+              accordingly instead of reusing a quantity for a different number
+              of servings).
             - For each recipe, provide:
               - "title": a short, appetizing recipe name, in Spanish.
               - "difficulty": exactly one of "Fácil", "Media", "Difícil".
               - "durationMinutes": total preparation plus cooking time, in
                 minutes, as a whole number.
-              - "servings": number of people the recipe serves, as a whole
-                number.
+              - "servings": exactly $SERVINGS_PLACEHOLDER.
               - "ingredients": the full list of ingredients needed for the
                 recipe (both prioritized and additional), each with "name" (in
-                Spanish) and "quantity" (a short free-text amount, e.g. "250g",
-                "2 unidades").
+                Spanish) and "quantity" (a short free-text amount already scaled
+                for $SERVINGS_PLACEHOLDER servings, e.g. "250g", "2 unidades").
               - "steps": the preparation steps, in Spanish, in the order they
                 must be performed, each step as a single string.
             - Output must be a JSON array of exactly 3 recipe objects matching
@@ -93,6 +101,7 @@ class FirebaseAiRecipeGenerationRepositoryImpl @Inject constructor(
               markdown outside the JSON array.
 
             Ingredients to prioritize: $INGREDIENTS_PLACEHOLDER
+            Servings required for every recipe: $SERVINGS_PLACEHOLDER
         """.trimIndent()
     }
 }
