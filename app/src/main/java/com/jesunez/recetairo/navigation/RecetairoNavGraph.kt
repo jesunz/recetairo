@@ -60,17 +60,18 @@ fun RecetairoNavGraph(navController: NavHostController = rememberNavController()
         composable(Screen.IngredientSelection.route) {
             IngredientSelectionScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onGenerateRecipeClick = { ingredientNames, _ ->
-                    // T4 de seleccion-raciones-recetas: `servings` todavía no viaja por la ruta;
-                    // T5 extiende Screen.GeneratedRecipes para incluirlo.
-                    navController.navigate(Screen.GeneratedRecipes.buildRoute(ingredientNames))
+                onGenerateRecipeClick = { ingredientNames, servings ->
+                    navController.navigate(Screen.GeneratedRecipes.buildRoute(ingredientNames, servings))
                 }
             )
         }
 
         composable(
             route = Screen.GeneratedRecipes.route,
-            arguments = listOf(navArgument("ingredientNames") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("ingredientNames") { type = NavType.StringType },
+                navArgument("servings") { type = NavType.StringType }
+            )
         ) {
             GeneratedRecipesScreen(
                 onNavigateBack = { navController.popBackStack() },
