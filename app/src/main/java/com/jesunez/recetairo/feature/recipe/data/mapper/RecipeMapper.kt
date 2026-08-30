@@ -30,8 +30,13 @@ fun Recipe.toEntity(): RecipeEntity = RecipeEntity(
     savedAt = (savedAt ?: Instant.now()).toEpochMilli()
 )
 
+// Gemini occasionally appends a stray trailing "+" to an ingredient's "name" field
+// (e.g. "Patatas+") even though the response schema only declares it as a plain string.
+// Strip it here so the displayed name and the pantry-match comparison both use the clean name.
+private val TRAILING_PLUS_REGEX = Regex("\\s*\\+\\s*$")
+
 fun RecipeIngredientDto.toDomain(): RecipeIngredient = RecipeIngredient(
-    name = name,
+    name = name.replace(TRAILING_PLUS_REGEX, "").trim(),
     quantityText = quantity ?: ""
 )
 
